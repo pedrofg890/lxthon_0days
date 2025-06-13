@@ -37,14 +37,16 @@ public class QuizGeneratorService {
     /**
      * Gera um Quiz com numQuestions perguntas e um título.
      */
-    public Quiz generateQuiz(List<TranscriptSegment> segments, int numQuestions) throws IOException {
-        // Monta prompt com SYSTEM + segmentos
-        String prompt = String.format(SYSTEM_PROMPT, numQuestions) + "\n\n" +
-                mapper.writeValueAsString(segments);
+    public Quiz generateQuiz(String cleanedTranscript, int numQuestions) throws IOException {
+        String prompt = String.format(SYSTEM_PROMPT, numQuestions) + "\n\n" + cleanedTranscript;
 
         String response = openAIService.getChatCompletion(prompt);
 
-        // Converte JSON de resposta diretamente em Quiz (com title e questions)
+        if (response == null || response.trim().isEmpty()) {
+            throw new IllegalArgumentException("Resposta da API veio vazia.");
+        }
+
         return mapper.readValue(response, Quiz.class);
     }
+
 }
