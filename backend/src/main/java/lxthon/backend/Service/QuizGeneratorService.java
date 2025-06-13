@@ -18,7 +18,6 @@ import java.util.List;
 public class QuizGeneratorService {
     private final OpenAIService openAIService;
     private final ObjectMapper mapper = new ObjectMapper();
-
     private static final String SYSTEM_PROMPT =
             "You are a quiz generator. Given a cleaned transcript (list of segments " +
                     "with startTime, endTime and text), create a quiz with %d multiple-choice questions. " +
@@ -30,6 +29,7 @@ public class QuizGeneratorService {
                     "- correctIndex (integer 0–3)\n" +
                     "Return the result as a JSON object with two fields: 'title' (string) and 'questions' (array of QuizQuestion).";
 
+    //Constructor
     public QuizGeneratorService(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
