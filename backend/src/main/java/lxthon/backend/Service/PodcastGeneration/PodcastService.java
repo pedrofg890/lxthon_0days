@@ -3,12 +3,11 @@ package lxthon.backend.Service.PodcastGeneration;
 import lombok.NonNull;
 import lxthon.backend.Service.OpenAIService;
 import lxthon.backend.Service.TranscriptCleanerService;
-import lxthon.backend.Service.YoutubeService;
+import lxthon.backend.Service.VideoService;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import lxthon.backend.Domain.TranscriptSegment;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -22,7 +21,7 @@ public class PodcastService {
     private static final Logger log = LoggerFactory.getLogger(PodcastService.class);
 
     @NonNull
-    private final YoutubeService youtubeService;
+    private final VideoService videoService;
 
     @NonNull
     private final OpenAIService openAIService;
@@ -33,11 +32,11 @@ public class PodcastService {
     @NonNull
     private final TranscriptCleanerService transcriptCleanerService;
 
-    public PodcastService(@NonNull YoutubeService youtubeService,
+    public PodcastService(@NonNull VideoService videoService,
                           @NonNull OpenAIService openAIService,
                           @NonNull VideoToSpeechService videoToSpeechService,
                           @NonNull TranscriptCleanerService transcriptCleanerService) {
-        this.youtubeService = youtubeService;
+        this.videoService = videoService;
         this.openAIService = openAIService;
         this.videoToSpeechService = videoToSpeechService;
         this.transcriptCleanerService = transcriptCleanerService;
@@ -57,7 +56,7 @@ public class PodcastService {
 
         // Step 1: Extract and clean transcript
         log.info("Step 1: Extracting transcript...");
-        List<TranscriptSegment> rawTranscript = youtubeService.getTranscript(videoUrl);
+        List<TranscriptSegment> rawTranscript = videoService.getTranscript(videoUrl);
 
         log.info("Step 2: Cleaning transcript...");
         List<TranscriptSegment> cleanedTranscript = transcriptCleanerService.cleanTranscript(rawTranscript);
