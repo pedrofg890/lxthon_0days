@@ -1,72 +1,64 @@
 package lxthon.backend.Service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import lxthon.backend.config.OpenAIConfig;
+import com.azure.ai.inference.ChatCompletionsClient;
+import com.azure.ai.inference.ChatCompletionsClientBuilder;
+import com.azure.ai.inference.models.ChatCompletions;
+import com.azure.ai.inference.models.ChatCompletionsOptions;
+import com.azure.ai.inference.models.ChatRequestMessage;
+import com.azure.ai.inference.models.ChatRequestUserMessage;
+import com.azure.ai.inference.models.ChatRequestSystemMessage;
+import com.azure.core.credential.AzureKeyCredential;
 
 @Service
 public class OpenAIService {
 
-    private final OpenAIConfig cfg;
-    private final RestTemplate restTemplate;
-
-    public OpenAIService(OpenAIConfig cfg) {
-        this.cfg = cfg;
-        this.restTemplate = new RestTemplate();
+    Dotenv dotenv = Dotenv.load();
+    private final String key;
+    private final String endpoint;
+    private final String model;
+    
+    public OpenAIService() {
+        this.key = dotenv.get("O4_MINI_GITHUB_API_KEY");
+        this.endpoint = "https://models.github.ai/inference";
+        this.model = "openai/gpt-4o-mini";
     }
 
     /**
      * Envia um prompt ao OpenAI e devolve o conteúdo da resposta.
      */
     public String getChatCompletion(String prompt) {
-        // 1) Prepara headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(cfg.getApiKey());
+        ChatCompletionsClient client = new ChatCompletionsClientBuilder()
+            .credential(new AzureKeyCredential(key))
+            .endpoint(endpoint)
+            .buildClient();
 
-        // 2) Mensagem de usuário
-        Map<String,Object> message = Map.of(
-                "role", "user",
-                "content", prompt
+        String systemMessage = "You are a helpful assistant for a social media platform. " +
+            "You should only answer questions related to social media features, user interactions, " +
+            "content sharing, profiles, messaging, privacy settings, community guidelines, " +
+            "and platform-specific functionality. " +
+            "If a user asks about topics unrelated to social media or this platform, " +
+            "politely redirect them to platform-related topics and suggest they contact " +
+            "general support for other questions.";
+
+        List<ChatRequestMessage> chatMessages = Arrays.asList(
+            new ChatRequestSystemMessage(systemMessage),
+            new ChatRequestUserMessage(prompt)
         );
 
-        // 3) Corpo da requisição
-        Map<String,Object> body = Map.of(
-                "model", cfg.getModel(),
-                "messages", List.of(message),
-                "temperature", 0.0
-        );
+        ChatCompletionsOptions chatCompletionsOptions = new ChatCompletionsOptions(chatMessages);
+        chatCompletionsOptions.setModel(model);
 
-        HttpEntity<Map<String,Object>> request = new HttpEntity<>(body, headers);
+        ChatCompletions completions = client.complete(chatCompletionsOptions);
 
-        // 4) POST para o endpoint configurado
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                cfg.getEndpoint(),
-                request,
-                Map.class
-        );
+        System.out.printf("%s.%n", completions.getChoice().getMessage().getContent());
 
-        // 5) Extrai texto da primeira escolha
-        Map<String,Object> respBody = response.getBody();
-        if (respBody != null && respBody.containsKey("choices")) {
-            @SuppressWarnings("unchecked")
-            List<Map<String,Object>> choices = (List<Map<String,Object>>) respBody.get("choices");
-            if (!choices.isEmpty()) {
-                @SuppressWarnings("unchecked")
-                Map<String,Object> first = choices.get(0);
-                @SuppressWarnings("unchecked")
-                Map<String,Object> messageResp = (Map<String,Object>) first.get("message");
-                return (String) messageResp.get("content");
-            }
-        }
-        return "No response from OpenAI";
+        return completions.getChoice().getMessage().getContent();
     }
 }
