@@ -14,10 +14,10 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class TranscriptProcessingService {
     
-    private final YoutubeService youtubeService;
+    private final VideoService youtubeService;
     private final TranscriptCleanerService transcriptCleanerService;
     
-    public TranscriptProcessingService(YoutubeService youtubeService, 
+    public TranscriptProcessingService(VideoService youtubeService, 
                                      TranscriptCleanerService transcriptCleanerService) {
         this.youtubeService = youtubeService;
         this.transcriptCleanerService = transcriptCleanerService;

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class PodcastService {
 
     @NonNull
-    private final YoutubeService youtubeService;
+    private final VideoService youtubeService;
 
     @NonNull
     private final OpenAIService openAIService;
@@ -16,7 +16,7 @@ public class PodcastService {
     //@NonNull
     //private final ElevenLabsService elevenLabsService;
 
-    public PodcastService(@NonNull YoutubeService youtubeService, @NonNull OpenAIService openAIService) {
+    public PodcastService(@NonNull VideoService youtubeService, @NonNull OpenAIService openAIService) {
         this.youtubeService = youtubeService;
         this.openAIService = openAIService;
     }

@@ -14,15 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lxthon.backend.Domain.TranscriptSegment;
-import lxthon.backend.Service.YoutubeService;
+import lxthon.backend.Service.VideoService;
 
 
 @RestController
 @RequestMapping("/api/videos")
-public class YoutubeController {
+public class VideoController {
 
     @NonNull
-    private final YoutubeService youtubeService;
+    private final VideoService youtubeService;
 
     @NonNull
     private final TextToSpeechService textToSpeechService;
@@ -30,7 +30,7 @@ public class YoutubeController {
     @NonNull
     private final TranscriptProcessingService transcriptProcessingService;
 
-    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService) {
+    public VideoController(VideoService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService) {
         this.youtubeService = youtubeService;
         this.textToSpeechService = textToSpeechService;
         this.transcriptProcessingService = transcriptProcessingService;
