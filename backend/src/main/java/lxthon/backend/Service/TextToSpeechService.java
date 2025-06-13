@@ -8,24 +8,30 @@ import java.util.*;
 @Service
 public class TextToSpeechService {
 
-    private static final String API_KEY = "YOUR_API_KEY";
-    private static final String URL = "https://texttospeech.googleapis.com/v1/text:synthesize?key=" + API_KEY;
+    private static final String API_KEY = "sk_6ad67e89486ad30915582bd90a0dc3dcc6b0eb2bac444b7f";
+    private static final String VOICE_ID = "Xb7hH8MSUJpSbSDYk0k2";
+    private static final String URL = "https://api.elevenlabs.io/v1/text-to-speech/" + VOICE_ID + "/stream";
 
-    public String synthesizeText(String text) {
+    public byte[] synthesizeText(String text) {
         RestTemplate restTemplate = new RestTemplate();
-
-        Map<String, Object> request = new HashMap<>();
-        request.put("input", Map.of("text", text));
-        request.put("voice", Map.of("languageCode", "en-US", "ssmlGender", "NEUTRAL"));
-        request.put("audioConfig", Map.of("audioEncoding", "MP3"));
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("xi-api-key", API_KEY);
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("text", text);
+        requestBody.put("voice_settings", Map.of("stability", 0, "similarity_boost", 0));
 
-        Map response = restTemplate.postForObject(URL, entity, Map.class);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        return (String) response.get("audioContent"); // Base64-encoded MP3
+        ResponseEntity<byte[]> response = restTemplate.exchange(
+                URL,
+                HttpMethod.POST,
+                entity,
+                byte[].class
+        );
+
+        return response.getBody();
     }
 }

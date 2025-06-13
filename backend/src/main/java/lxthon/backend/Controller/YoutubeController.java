@@ -16,19 +16,20 @@ import lxthon.backend.Service.YoutubeService;
 @RestController
 @RequestMapping("/api/videos")
 public class YoutubeController {
-    
+
     private final YoutubeService youtubeService;
     private final TextToSpeechService textToSpeechService;
-    
+
     public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService) {
-        this.youtubeService = youtubeService; this.textToSpeechService = textToSpeechService;
+        this.youtubeService = youtubeService;
+        this.textToSpeechService = textToSpeechService;
     }
-    
+
     @GetMapping("/info")
     public String getVideoInfo(@RequestParam String url) throws IOException, InterruptedException {
         return youtubeService.getVideoInfo(url);
     }
-    
+
     @GetMapping("/download")
     public String downloadVideo(
             @RequestParam String url,
@@ -48,14 +49,17 @@ public class YoutubeController {
         }
     }
 
-    @PostMapping(value = "/synthesize", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(value = "/synthesize", produces = "audio/mpeg")
     public ResponseEntity<byte[]> synthesize(@RequestBody String text) {
         try {
-            byte[] audioBytes = textToSpeechService.synthesizeText(text).getBytes();
+            byte[] audioBytes = textToSpeechService.synthesizeText(text);
+
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"output.mp3\"")
+                    .contentType(MediaType.valueOf("audio/mpeg"))
                     .body(audioBytes);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body(null);
         }
     }
