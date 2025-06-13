@@ -1,12 +1,14 @@
 package lxthon.backend.Controller;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lxthon.backend.Domain.TranscriptSegment;
 import lxthon.backend.Service.YoutubeService;
 
 @RestController
@@ -30,12 +32,11 @@ public class YoutubeController {
             @RequestParam(required = false) String format) throws IOException, InterruptedException {
         return youtubeService.downloadVideo(url, format);
     }
-    
-    @GetMapping("/playlist")
-    public String downloadPlaylist(
-            @RequestParam String url,
-            @RequestParam(required = false) String format) throws IOException, InterruptedException {
-        return youtubeService.downloadPlaylist(url, format);
+
+    @GetMapping("/transcript")
+    public List<TranscriptSegment> getTranscript(@RequestParam String url) throws IOException, InterruptedException {
+        return youtubeService.getTranscript(url);
     }
+    
 }
 
