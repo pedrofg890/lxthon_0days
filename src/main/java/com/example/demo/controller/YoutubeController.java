@@ -1,0 +1,35 @@
+package com.example.demo.controller;
+
+import com.example.demo.service.YoutubeService;
+import org.springframework.web.bind.annotation.*;
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/api/videos")
+public class YoutubeController {
+    
+    private final YoutubeService youtubeService;
+    
+    public YoutubeController(YoutubeService youtubeService) {
+        this.youtubeService = youtubeService;
+    }
+    
+    @GetMapping("/info")
+    public String getVideoInfo(@RequestParam String url) throws IOException, InterruptedException {
+        return youtubeService.getVideoInfo(url);
+    }
+    
+    @GetMapping("/download")
+    public String downloadVideo(
+            @RequestParam String url,
+            @RequestParam(required = false) String format) throws IOException, InterruptedException {
+        return youtubeService.downloadVideo(url, format);
+    }
+    
+    @GetMapping("/playlist")
+    public String downloadPlaylist(
+            @RequestParam String url,
+            @RequestParam(required = false) String format) throws IOException, InterruptedException {
+        return youtubeService.downloadPlaylist(url, format);
+    }
+}

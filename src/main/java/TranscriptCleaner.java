@@ -1,4 +1,4 @@
-package java;
+/*package java;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,9 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Deterministic, context-aware transcript cleaner in Java.
- */
 public class TranscriptCleaner {
     private static final double TEMPERATURE = 0.0;
     private static final String MODEL = "gpt-4o-mini"; // Adjust as needed
@@ -133,4 +130,4 @@ public class TranscriptCleaner {
         TranscriptCleaner cleaner = new TranscriptCleaner(apiKey);
         cleaner.clean(args[0], args[1]);
     }
-}
+} */
