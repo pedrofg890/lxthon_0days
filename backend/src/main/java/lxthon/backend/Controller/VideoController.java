@@ -5,17 +5,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.NonNull;
-import lxthon.backend.Service.SummaryGeneratorService;
-import lxthon.backend.Service.TranscriptCleanerService;
-import lxthon.backend.Service.TranscriptProcessingService;
+import lxthon.backend.Domain.Quiz;
+import lxthon.backend.Service.*;
 import lxthon.backend.Service.PodcastGeneration.VideoToSpeechService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lxthon.backend.Domain.TranscriptSegment;
-import lxthon.backend.Service.VideoService;
 
 
 @RestController
@@ -34,11 +31,15 @@ public class VideoController {
     @NonNull
     private final SummaryGeneratorService summaryGenerator;
 
-    public VideoController(VideoService youtubeService, VideoToSpeechService videoToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator) {
+    @NonNull
+    private final QuizGeneratorService quizGenerator;
+
+    public VideoController(VideoService youtubeService, VideoToSpeechService videoToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator,  @NonNull QuizGeneratorService quizGenerator) {
         this.youtubeService = youtubeService;
         this.videoToSpeechService = videoToSpeechService;
         this.transcriptProcessingService = transcriptProcessingService;
         this.summaryGenerator = summaryGenerator;
+        this.quizGenerator = quizGenerator;
     }
 
     @GetMapping("/info")
@@ -86,6 +87,22 @@ public class VideoController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
+
+    @GetMapping("/quiz")
+    public ResponseEntity<?> generateQuiz (@RequestParam String url, @RequestParam(defaultValue = "5") int numQuestions) {
+        try {
+            List<TranscriptSegment> transcript = youtubeService.getTranscript(url);
+            String summary = summaryGenerator.generateSummary(transcript);
+            Quiz quiz = quizGenerator.generateQuiz(summary, numQuestions);
+
+            return ResponseEntity.ok(quiz);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao gerar quiz.");
+        }
+    }
+
 }
 
 
