@@ -65,6 +65,18 @@
 			<version>2.15.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-ai-inference</artifactId>
+			<version>1.0.0-beta.5</version>
+		</dependency>
+
 		<!-- Apache HttpClient 5 -->
 		<dependency>
 			<groupId>org.apache.httpcomponents.client5</groupId>
