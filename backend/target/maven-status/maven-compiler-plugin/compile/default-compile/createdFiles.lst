@@ -1,1 +1,12 @@
-lxthon/backend/BackendApplication.class
+lxthon\backend\Main.class
+lxthon\backend\Service\TextToSpeechService.class
+lxthon\backend\Service\TranscriptCleanerService.class
+lxthon\backend\Domain\QuizQuestion.class
+lxthon\backend\Domain\Quiz.class
+lxthon\backend\Controller\ChatController.class
+lxthon\backend\Service\QuizGeneratorService.class
+lxthon\backend\Service\YoutubeService.class
+lxthon\backend\Controller\YoutubeController.class
+lxthon\backend\config\OpenAIConfig.class
+lxthon\backend\Service\OpenAIService.class
+lxthon\backend\Domain\TranscriptSegment.class

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { sendURL } from '../../services/videoService';
 import '../../styles/HomePage.css'
-import '../../styles/requestButtom.css';
+import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 
 export default function HomePage() {
@@ -8,6 +10,7 @@ export default function HomePage() {
     const [video, setVideo] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     const handleInputChange = (e) => setUrl(e.target.value);
 
@@ -16,13 +19,11 @@ export default function HomePage() {
         setError("");
         setVideo(null);
         try {
-            // Replace with your backend endpoint if different
-            const res = await fetch(`/api/youtube/info?url=${encodeURIComponent(url)}`);
-            if (!res.ok) throw new Error("Failed to fetch video info");
-            const data = await res.json();
+            // Use sendURL from videoService
+            const data = await sendURL({ url });
             setVideo(data);
         } catch (err) {
-            setError("Could not fetch video info. Please check the URL.");
+            setError("Could not send video URL. Please check the URL.");
         } finally {
             setLoading(false);
         }
@@ -59,7 +60,7 @@ export default function HomePage() {
                     </button>
                 </div>
                 <div style={{ width: '100%', maxWidth: '900px', display: 'flex', gap: '1.5rem', marginTop: '1.5rem', justifyContent: 'center' }}>
-                    <button className="belowBarButton" >
+                    <button className="belowBarButton" onClick={() => navigate('/transcript')}>
                         Get Transcript
                     </button>
                     <button className="belowBarButton" >

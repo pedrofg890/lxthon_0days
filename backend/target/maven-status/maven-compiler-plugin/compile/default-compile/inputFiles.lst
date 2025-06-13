@@ -1,1 +1,12 @@
-/Users/ruben/Desktop/Java Projects/lxthon_0days/backend/src/main/java/lxthon/backend/BackendApplication.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\config\OpenAIConfig.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Controller\ChatController.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Controller\YoutubeController.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Domain\Quiz.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Domain\QuizQuestion.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Domain\TranscriptSegment.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Main.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Service\OpenAIService.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Service\QuizGeneratorService.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Service\TextToSpeechService.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Service\TranscriptCleanerService.java
+C:\Users\Pedro Gonçalves\Documents\Pedro\SWITCH.DEV\lxthon_0days\backend\src\main\java\lxthon\backend\Service\YoutubeService.java
