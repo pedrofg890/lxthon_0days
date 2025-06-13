@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../../styles/HomePage.css'
 import '../../styles/requestButtom.css';
+import '../../styles/BelowBarButtom.css';
 
 export default function HomePage() {
     const [url, setUrl] = useState("");
@@ -55,6 +56,17 @@ export default function HomePage() {
                         disabled={loading || !url.trim()}
                     >
                         {loading ? '...' : '▶'}
+                    </button>
+                </div>
+                <div style={{ width: '100%', maxWidth: '900px', display: 'flex', gap: '1.5rem', marginTop: '1.5rem', justifyContent: 'center' }}>
+                    <button className="belowBarButton" >
+                        Get Transcript
+                    </button>
+                    <button className="belowBarButton" >
+                        Get Insights
+                    </button>
+                    <button className="belowBarButton" >
+                        Generate Test
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
