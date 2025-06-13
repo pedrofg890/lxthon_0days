@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import lxthon.backend.Domain.TranscriptSegment;
 import lxthon.backend.Service.YoutubeService;
 
-import static java.awt.SystemColor.text;
 
 @RestController
 @RequestMapping("/api/videos")
@@ -49,17 +48,17 @@ public class YoutubeController {
         }
     }
 
-        @PostMapping(value = "/synthesize", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-        public ResponseEntity<byte[]> synthesize(@RequestBody String text) {
-            try {
-                byte[] audioBytes = textToSpeechService.synthesizeText(text).getBytes();
-                return ResponseEntity.ok()
-                        .header("Content-Disposition", "attachment; filename=\"output.mp3\"")
-                        .body(audioBytes);
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body(null);
-            }
+    @PostMapping(value = "/synthesize", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<byte[]> synthesize(@RequestBody String text) {
+        try {
+            byte[] audioBytes = textToSpeechService.synthesizeText(text).getBytes();
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"output.mp3\"")
+                    .body(audioBytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
         }
     }
+}
 
 
