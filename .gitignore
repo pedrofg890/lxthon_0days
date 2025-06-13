@@ -34,7 +34,7 @@ build/
 
 ### Environment Variables ###
 backend/.env
-API_KEY.env
+.env
 *.env
 
 
