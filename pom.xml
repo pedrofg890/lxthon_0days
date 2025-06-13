@@ -75,20 +75,8 @@
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
-
-		<dependency>
-			<groupId>com.kpitaine.os</groupId>
-			<artifactId>yt-dlp-java</artifactId>
-			<version>2.0.6</version>
-		</dependency>
 	</dependencyManagement>
 
-	<repositories>
-		<repository>
-			<id>gotan-os</id>
-			<url>https://repository.dev.gotan.io/repository/gotan.os/</url>
-		</repository>
-	</repositories>
 
 	<build>
 		<plugins>
