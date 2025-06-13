@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sendURL } from '../../services/videoService';
 import { getTranscript } from '../../services/transcriptService';
 import '../../styles/HomePage.css'
 import '../../styles/RequestButtom.css';
@@ -8,7 +7,6 @@ import '../../styles/BelowBarButtom.css';
 
 export default function HomePage() {
     const [url, setUrl] = useState("");
-    const [video, setVideo] = useState(null);
     const [transcript, setTranscript] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -19,17 +17,13 @@ export default function HomePage() {
     const handleRequest = async () => {
         setLoading(true);
         setError("");
-        setVideo(null);
         setTranscript(null);
         try {
-            // Use sendURL from videoService
-            const data = await sendURL({ url });
-            setVideo(data);
-            // Fetch transcript after sending URL
-            const transcriptData = await getTranscript();
+            // Only fetch transcript using the input URL
+            const transcriptData = await getTranscript(url);
             setTranscript(transcriptData);
         } catch (err) {
-            setError("Could not send video URL or fetch transcript. Please check the URL.");
+            setError("Could not fetch transcript. Please check the URL.");
         } finally {
             setLoading(false);
         }
@@ -77,16 +71,10 @@ export default function HomePage() {
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
-                {video && (
-                    <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <img src={video.thumbnailUrl} alt="Video thumbnail" style={{ maxWidth: 320, borderRadius: 12, marginBottom: '1rem' }} />
-                        <h2 style={{ color: '#fff', fontSize: '2rem', textAlign: 'center' }}>{video.title}</h2>
-                    </div>
-                )}
                 {transcript && (
                     <div style={{ marginTop: '2rem', color: '#fff', background: '#232323', borderRadius: '12px', padding: '1rem', maxWidth: 700 }}>
                         <h3>Transcript Preview:</h3>
-                        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{JSON.stringify(transcript, null, 2)}</pre>
+                        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{Array.isArray(transcript) ? transcript.join('\n') : transcript}</pre>
                     </div>
                 )}
             </div>
