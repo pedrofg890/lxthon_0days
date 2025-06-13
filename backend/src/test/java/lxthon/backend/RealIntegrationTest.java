@@ -1,7 +1,5 @@
-/*package lxthon.backend;
+package lxthon.backend;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lxthon.backend.Domain.TranscriptSegment;
 import lxthon.backend.Domain.Quiz;
 import lxthon.backend.Service.TranscriptCleanerService;
@@ -9,9 +7,11 @@ import lxthon.backend.Service.QuizGeneratorService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.Resource;
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,37 +19,58 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 public class RealIntegrationTest {
 
-    @Value("classpath:sample_input.json")
-    private Resource sampleInput;
-
     @Autowired
     private TranscriptCleanerService transcriptCleanerService;
 
     @Autowired
     private QuizGeneratorService quizGeneratorService;
 
-    private final ObjectMapper mapper = new ObjectMapper();
+//    @Test
+//    public void testTranscriptCleaningAndQuizGeneration() throws Exception {
+//        // Carrega o sample do ficheiro JSON
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("sample.json");
+//        assertNotNull(inputStream, "Ficheiro sample.json não encontrado");
+//        List<TranscriptSegment> transcript = objectMapper.readValue(inputStream, new TypeReference<>() {});
+//
+//
+//        // Limpa o transcript e gera o quiz
+//        List<TranscriptSegment> cleanedTranscript = transcriptCleanerService.cleanTranscript(transcript);
+//        Quiz quiz = quizGeneratorService.generateQuiz(cleanedTranscript);
+//
+//        // Validações básicas
+//        assertNotNull(quiz);
+//        assertNotNull(quiz.getTitle());
+//        assertFalse(quiz.getQuestions().isEmpty(), "O quiz não tem questões");
+//    }
 
     @Test
-    public void testTranscriptCleaningAndQuizGeneration() throws Exception {
-        // 1) Carrega segmentos brutos do JSON de teste
-        List<TranscriptSegment> rawSegments = mapper.readValue(
-                sampleInput.getInputStream(),
+    void testTranscriptCleaningAndQuizGeneration2() throws IOException {
+        // Carrega o ficheiro sample como lista de TranscriptSegment
+        ObjectMapper mapper = new ObjectMapper();
+        InputStream inputStream = getClass().getResourceAsStream("/sample_transcript.json");
+        List<TranscriptSegment> transcriptSegments = mapper.readValue(
+                inputStream,
                 new TypeReference<List<TranscriptSegment>>() {}
         );
-        assertFalse(rawSegments.isEmpty(), "sample_input.json deve conter segmentos");
 
-        // 2) Limpa transcrição chamando a API real
-        List<TranscriptSegment> cleaned = transcriptCleanerService.cleanTranscript(rawSegments);
-        assertFalse(cleaned.isEmpty(), "Lista de segmentos limpos não deve estar vazia");
-        System.out.println("Cleaned Transcript:\n" +
-                mapper.writerWithDefaultPrettyPrinter().writeValueAsString(cleaned));
+        // Usa o serviço de limpeza
+        List<TranscriptSegment> cleanedSegments = transcriptCleanerService.cleanTranscript(transcriptSegments);
 
-        // 3) Gera quiz de 5 perguntas chamando a API real
-        Quiz quiz = quizGeneratorService.generateQuiz(cleaned, 1);
-        assertNotNull(quiz.getTitle(), "Quiz deve ter um título");
-        assertEquals(5, quiz.getQuestions().size(), "Quiz deve ter 5 perguntas");
-        System.out.println("Generated Quiz:\n" +
-                mapper.writerWithDefaultPrettyPrinter().writeValueAsString(quiz));
+        // Gera o quiz com 3 perguntas
+        Quiz quiz = quizGeneratorService.generateQuiz(cleanedSegments, 3);
+
+        // Verificações simples (podes expandir)
+        assertNotNull(quiz);
+        assertNotNull(quiz.getTitle());
+        assertFalse(quiz.getQuestions().isEmpty());
+
+        System.out.println("Quiz Title: " + quiz.getTitle());
+        quiz.getQuestions().forEach(q -> {
+            System.out.println("Q: " + q.getQuestionText());
+            System.out.println("Options: " + q.getOptions());
+            System.out.println("Correct Index: " + q.getCorrectOptionIndex());
+        });
     }
-}*/
+
+}

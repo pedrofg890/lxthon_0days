@@ -1,5 +1,14 @@
 [
-  { "startTime": 0.0, "endTime": 2.0, "text": "um hello world uh", "normalizedText": null },
-  { "startTime": 2.0, "endTime": 5.0, "text": "this is a test you know", "normalizedText": null },
-  { "startTime": 5.0, "endTime": 7.5, "text": "[laugh] it's working", "normalizedText": null }
+  {
+    "startTime": 0.0,
+    "endTime": 3.2,
+    "text": "Olá, sejam bem-vindos ao nosso vídeo sobre segurança digital.",
+    "normalizedText": "Olá sejam bem-vindos ao nosso vídeo sobre segurança digital"
+  },
+  {
+    "startTime": 3.3,
+    "endTime": 7.5,
+    "text": "Hoje vamos falar sobre como proteger as suas contas online.",
+    "normalizedText": "Hoje vamos falar sobre como proteger as suas contas online"
+  }
 ]
