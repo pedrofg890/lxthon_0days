@@ -26,10 +26,7 @@ public class TranscriptCleanerService {
                     "3. Normalize numbers, dates, acronyms and special terms consistently.\n" +
                     "4. Preserve original meaning and non-verbal markers.\n" +
                     "5. Do NOT modify timecodes.\n" +
-                    "Return a JSON array of TranscriptSegment objects.";
-
-    @NonNull
-    private static final int CONTEXT_WINDOW = 3;
+                    "Return ONLY a JSON array of TranscriptSegment objects with the same structure, but with normalizedText filled. Do not include any other text or formatting.";
 
     @NonNull
     private final ObjectMapper mapper = new ObjectMapper();
@@ -44,28 +41,56 @@ public class TranscriptCleanerService {
      * @param segments lista de TranscriptSegment com texto bruto
      * @return lista de TranscriptSegment com normalizedText preenchido
      */
-    public List<TranscriptSegment> cleanTranscript (List<TranscriptSegment> segments) throws IOException {
-        List<TranscriptSegment> result = new ArrayList<>();
-        for (int i = 0; i < segments.size(); i++) {
-            TranscriptSegment seg = segments.get(i);
-            StringBuilder prompt = new StringBuilder();
-            prompt.append(SYSTEM_PROMPT).append("\n\n");
+    public List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
+        // Serialize the segments to JSON
+        String segmentsJson = mapper.writeValueAsString(segments);
 
-            int ctxStart = Math.max(0, i - CONTEXT_WINDOW);
-            for (int j = ctxStart; j < i; j++) {
-                TranscriptSegment ctx = segments.get(j);
-                prompt.append(String.format("[%.2f→%.2f] %s\n",
-                        ctx.getStartTime(), ctx.getEndTime(), ctx.getText()));
-            }
-            prompt.append(String.format("[%.2f→%.2f] Target: %s\nNormalized:",
-                    seg.getStartTime(), seg.getEndTime(), seg.getText()));
+        // Build the prompt
+        StringBuilder prompt = new StringBuilder();
+        prompt.append(SYSTEM_PROMPT).append("\n\n");
+        prompt.append("Raw transcript segments (JSON array):\n");
+        prompt.append(segmentsJson).append("\n\n");
+        prompt.append("Return ONLY the cleaned array in the same JSON format, with 'normalizedText' filled for each segment. Do not include any other text or formatting.");
 
-            String normalized = openAIService.getChatCompletion(prompt.toString()).trim();
-            result.add(new TranscriptSegment(
-                    seg.getStartTime(), seg.getEndTime(), seg.getText(), normalized
-            ));
+        // Get the cleaned transcript from the AI
+        String aiResponse = openAIService.getChatCompletion(prompt.toString()).trim();
+
+        // Extract the JSON array from the response
+        String jsonArray = extractJsonArray(aiResponse);
+        
+        try {
+            // Parse the AI's response back into a list of TranscriptSegment objects
+            List<TranscriptSegment> cleanedSegments = mapper.readValue(
+                jsonArray,
+                mapper.getTypeFactory().constructCollectionType(List.class, TranscriptSegment.class)
+            );
+            return cleanedSegments;
+        } catch (Exception e) {
+            System.err.println("Failed to parse AI response: " + aiResponse);
+            throw new IOException("Failed to parse AI response: " + e.getMessage(), e);
         }
-        return result;
+    }
+
+    /**
+     * Extracts a JSON array from the AI response, handling various response formats.
+     * @param response The raw response from the AI
+     * @return The extracted JSON array as a string
+     */
+    private String extractJsonArray(String response) {
+        // Remove any markdown code block markers
+        response = response.replaceAll("```json\\s*", "")
+                         .replaceAll("```\\s*", "")
+                         .trim();
+
+        // Find the first '[' and last ']'
+        int start = response.indexOf('[');
+        int end = response.lastIndexOf(']');
+        
+        if (start == -1 || end == -1 || end <= start) {
+            throw new IllegalArgumentException("No valid JSON array found in response: " + response);
+        }
+        
+        return response.substring(start, end + 1);
     }
 }
 

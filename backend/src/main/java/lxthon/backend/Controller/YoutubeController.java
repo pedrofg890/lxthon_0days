@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.NonNull;
 import lxthon.backend.Service.TextToSpeechService;
 import lxthon.backend.Service.TranscriptCleanerService;
+import lxthon.backend.Service.TranscriptProcessingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +27,12 @@ public class YoutubeController {
     private final TextToSpeechService textToSpeechService;
 
     @NonNull
-    private final TranscriptCleanerService transcriptCleanerService;
+    private final TranscriptProcessingService transcriptProcessingService;
 
-    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptCleanerService transcriptCleanerService) {
+    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService) {
         this.youtubeService = youtubeService;
         this.textToSpeechService = textToSpeechService;
-        this.transcriptCleanerService = transcriptCleanerService;
+        this.transcriptProcessingService = transcriptProcessingService;
     }
 
     @GetMapping("/info")
@@ -70,6 +71,17 @@ public class YoutubeController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    @GetMapping("/clean-transcript")
+    public ResponseEntity<List<TranscriptSegment>> cleanTranscript(@RequestParam String url) throws IOException {
+        try {
+            List<TranscriptSegment> cleanedTranscript = transcriptProcessingService.getCleanedTranscript(url);
+            return ResponseEntity.ok(cleanedTranscript);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

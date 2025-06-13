@@ -26,18 +26,12 @@ public class TranscriptProcessingService {
      * @param url YouTube video URL
      * @return List of cleaned TranscriptSegment objects with both text and normalizedText populated
      */
-    public List<TranscriptSegment> getCleanedTranscript(String url) throws IOException, InterruptedException {
-        System.out.println("Starting transcript processing for URL: " + url);
-        
+    public List<TranscriptSegment> getCleanedTranscript(String url) throws IOException, InterruptedException {        
         // Step 1: Extract raw transcript from YouTube
-        System.out.println("Step 1: Extracting raw transcript...");
         List<TranscriptSegment> rawTranscript = youtubeService.getTranscript(url);
-        System.out.println("Extracted " + rawTranscript.size() + " transcript segments");
         
         // Step 2: Clean the transcript using AI
-        System.out.println("Step 2: Cleaning transcript with AI...");
         List<TranscriptSegment> cleanedTranscript = transcriptCleanerService.cleanTranscript(rawTranscript);
-        System.out.println("Transcript cleaning completed");
         
         return cleanedTranscript;
     }
@@ -48,7 +42,6 @@ public class TranscriptProcessingService {
      * @return List of raw TranscriptSegment objects with only text populated
      */
     public List<TranscriptSegment> getRawTranscript(String url) throws IOException, InterruptedException {
-        System.out.println("Extracting raw transcript for URL: " + url);
         return youtubeService.getTranscript(url);
     }
 } 
