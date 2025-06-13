@@ -1,2 +1,12 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.eclipse/

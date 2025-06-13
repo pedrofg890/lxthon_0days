@@ -25,6 +25,7 @@ public class TranscriptCleanerService {
     private static final int CONTEXT_WINDOW = 3;
     private final ObjectMapper mapper = new ObjectMapper();
 
+    //Constructor
     public TranscriptCleanerService(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
