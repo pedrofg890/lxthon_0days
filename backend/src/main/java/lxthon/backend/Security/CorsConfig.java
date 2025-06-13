@@ -13,22 +13,11 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        
-        // Allow all origins (you can restrict this to specific origins in production)
-        config.addAllowedOrigin("http://localhost:3000"); // React default port
-        
-        // Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+        config.addAllowedOrigin("http://localhost:3000"); 
         config.addAllowedMethod("*");
-        
-        // Allow all headers
         config.addAllowedHeader("*");
-        
-        // Allow credentials (cookies, authorization headers, etc.)
         config.setAllowCredentials(true);
-        
-        // Apply this configuration to all paths
         source.registerCorsConfiguration("/**", config);
-        
         return new CorsFilter(source);
     }
 }
