@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 import lxthon.backend.Domain.TranscriptSegment;
 
 @Service
-public class YoutubeService {
+public class VideoService {
     
     private final String ytDlpPath;
     
-    public YoutubeService() {
+    public VideoService() {
         // You can configure this in application.properties
         this.ytDlpPath = "yt-dlp"; // If yt-dlp is in PATH
         // Or use absolute path like: "C:\\path\\to\\yt-dlp.exe" for Windows
