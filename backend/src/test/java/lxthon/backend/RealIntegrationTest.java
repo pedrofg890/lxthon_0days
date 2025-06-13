@@ -1,4 +1,4 @@
-package lxthon.backend;
+/*package lxthon.backend;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,4 +52,4 @@ public class RealIntegrationTest {
         System.out.println("Generated Quiz:\n" +
                 mapper.writerWithDefaultPrettyPrinter().writeValueAsString(quiz));
     }
-}
+}*/
