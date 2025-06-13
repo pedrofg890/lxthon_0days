@@ -43,7 +43,7 @@ public class TranscriptCleaner {
     private static final int CONTEXT_WINDOW = 3;
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static void main(String[] args) throws IOException {
+    public static void main (String[] args) throws IOException {
         if (args.length < 2) {
             System.err.println("Usage: java TranscriptCleaner <input.json> <output.json>");
             System.exit(1);
