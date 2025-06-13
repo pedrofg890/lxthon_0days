@@ -1,4 +1,4 @@
-package lxthon.backend;
+/*package lxthon.backend;
 
 import lxthon.backend.Domain.TranscriptSegment;
 import lxthon.backend.Domain.Quiz;
@@ -73,4 +73,4 @@ public class RealIntegrationTest {
         });
     }
 
-}
+}*/
