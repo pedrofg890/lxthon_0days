@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.nio.file.Files;
 
@@ -54,68 +55,82 @@ public class YoutubeService {
         File tempDir = Files.createTempDirectory("yt-dlp-subtitles").toFile();
         System.out.println("Creating transcript files in directory: " + tempDir.getAbsolutePath());
         
-        List<String> command = new ArrayList<>();
-        command.add(ytDlpPath);
-        command.add(url);
-        command.add("--skip-download");       // Skip video download
-        command.add("--write-auto-sub");      // Write auto-generated subtitles
-        command.add("--sub-lang");
-        command.add("en");
-        command.add("--sub-format");
-        command.add("vtt");
-        command.add("--output");
-        // Use a simpler output template that won't confuse yt-dlp
-        command.add(tempDir.getAbsolutePath() + File.separator + "%(id)s.%(ext)s");
-        
-        System.out.println("Executing command: " + String.join(" ", command));
-        
-        // Execute the command
-        String output = executeCommand(command);
-        System.out.println("yt-dlp output: " + output);
-        
-        // Find the VTT file
-        File[] allFiles = tempDir.listFiles();
-        System.out.println("All files in temp directory: " + Arrays.toString(allFiles));
-        
-        File[] vttFiles = tempDir.listFiles((dir, name) -> name.endsWith(".vtt"));
-        
-        if (vttFiles == null || vttFiles.length == 0) {
-            // Try to find any subtitle file
-            File[] subFiles = tempDir.listFiles((dir, name) -> 
-                name.contains(".en.vtt") || name.endsWith(".vtt"));
-            
-            if (subFiles != null && subFiles.length > 0) {
-                vttFiles = subFiles;
-            } else {
-                throw new IOException("No VTT files found. All files: " + Arrays.toString(allFiles));
-            }
-        }
-        
-        File subtitleFile = vttFiles[0];
-        System.out.println("Processing subtitle file: " + subtitleFile.getName() + " (size: " + subtitleFile.length() + " bytes)");
-        
-        if (subtitleFile.length() == 0) {
-            throw new IOException("Subtitle file is empty");
-        }
-        
-        // Parse the VTT file
-        List<TranscriptSegment> segments = parseVttFile(subtitleFile);
-        
-        // Clean up
         try {
-            File[] files = tempDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    file.delete();
+            // First, check available subtitle languages
+            List<String> listSubsCommand = new ArrayList<>();
+            listSubsCommand.add(ytDlpPath);
+            listSubsCommand.add(url);
+            listSubsCommand.add("--list-subs");
+            
+            String subsInfo = executeCommand(listSubsCommand);
+            System.out.println("Available subtitles: " + subsInfo);
+            
+            // Try to get English subtitles
+            List<String> command = new ArrayList<>();
+            command.add(ytDlpPath);
+            command.add(url);
+            command.add("--skip-download");
+            command.add("--write-auto-sub");
+            command.add("--sub-lang");
+            command.add("en");
+            command.add("--sub-format");
+            command.add("vtt");
+            command.add("--output");
+            command.add(tempDir.getAbsolutePath() + File.separator + "%(id)s.%(ext)s");
+            
+            System.out.println("Executing command: " + String.join(" ", command));
+            
+            // Execute the command
+            String output = executeCommand(command);
+            System.out.println("yt-dlp output: " + output);
+            
+            // Find the VTT file
+            File[] allFiles = tempDir.listFiles();
+            System.out.println("All files in temp directory: " + Arrays.toString(allFiles));
+            
+            File[] vttFiles = tempDir.listFiles((dir, name) -> name.endsWith(".vtt"));
+            
+            if (vttFiles == null || vttFiles.length == 0) {
+                // Try to find any subtitle file
+                File[] subFiles = tempDir.listFiles((dir, name) -> 
+                    name.contains(".en.vtt") || name.endsWith(".vtt"));
+                
+                if (subFiles != null && subFiles.length > 0) {
+                    vttFiles = subFiles;
+                } else {
+                    System.out.println("No subtitles found for video: " + url);
+                    return Collections.emptyList();
                 }
             }
-            tempDir.delete();
-        } catch (Exception e) {
-            System.out.println("Warning: Could not clean up temp files: " + e.getMessage());
+            
+            File subtitleFile = vttFiles[0];
+            System.out.println("Processing subtitle file: " + subtitleFile.getName() + " (size: " + subtitleFile.length() + " bytes)");
+            
+            if (subtitleFile.length() == 0) {
+                System.out.println("Subtitle file is empty for video: " + url);
+                return Collections.emptyList();
+            }
+            
+            // Parse the VTT file
+            List<TranscriptSegment> segments = parseVttFile(subtitleFile);
+            
+            System.out.println("Successfully extracted " + segments.size() + " transcript segments");
+            return segments;
+            
+        } finally {
+            // Clean up temp directory
+            try {
+                File[] files = tempDir.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        file.delete();
+                    }
+                }
+                tempDir.delete();
+            } catch (Exception e) {
+                System.out.println("Warning: Could not clean up temp files: " + e.getMessage());
+            }
         }
-        
-        System.out.println("Successfully extracted " + segments.size() + " transcript segments");
-        return segments;
     }
     
     private List<TranscriptSegment> parseVttFile(File vttFile) throws IOException {
