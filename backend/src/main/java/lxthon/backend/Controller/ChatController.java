@@ -1,16 +1,26 @@
 package lxthon.backend.Controller;
 
 import org.springframework.http.ResponseEntity;
+import lombok.NonNull;
+import lxthon.backend.Service.PodcastService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lxthon.backend.Service.OpenAIService;
 
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
+
+    @NonNull
     private final OpenAIService openAIService;
 
-    public ChatController(OpenAIService openAIService) {
+    @NonNull
+    private final PodcastService podcastService;
+
+    public ChatController(OpenAIService openAIService, PodcastService podcastService) {
         this.openAIService = openAIService;
+        this.podcastService = podcastService;
     }
 
     @PostMapping("/completion")

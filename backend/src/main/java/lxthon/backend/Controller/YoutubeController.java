@@ -3,7 +3,9 @@ package lxthon.backend.Controller;
 import java.io.IOException;
 import java.util.List;
 
+import lombok.NonNull;
 import lxthon.backend.Service.TextToSpeechService;
+import lxthon.backend.Service.TranscriptCleanerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +19,19 @@ import lxthon.backend.Service.YoutubeService;
 @RequestMapping("/api/videos")
 public class YoutubeController {
 
+    @NonNull
     private final YoutubeService youtubeService;
+
+    @NonNull
     private final TextToSpeechService textToSpeechService;
 
-    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService) {
+    @NonNull
+    private final TranscriptCleanerService transcriptCleanerService;
+
+    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptCleanerService transcriptCleanerService) {
         this.youtubeService = youtubeService;
         this.textToSpeechService = textToSpeechService;
+        this.transcriptCleanerService = transcriptCleanerService;
     }
 
     @GetMapping("/info")
