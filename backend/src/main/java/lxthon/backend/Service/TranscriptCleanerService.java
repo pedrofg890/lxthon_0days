@@ -31,6 +31,9 @@ public class TranscriptCleanerService {
     @NonNull
     private final ObjectMapper mapper = new ObjectMapper();
 
+    // Maximum number of segments to process in one API call
+    private static final int MAX_SEGMENTS_PER_CHUNK = 50;
+
     //Constructor
     public TranscriptCleanerService(OpenAIService openAIService) {
         this.openAIService = openAIService;
@@ -42,8 +45,37 @@ public class TranscriptCleanerService {
      * @return lista de TranscriptSegment com normalizedText preenchido
      */
     public List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
-        // Serialize the segments to JSON
-        String segmentsJson = mapper.writeValueAsString(segments);
+        List<TranscriptSegment> result = new ArrayList<>();
+        
+        // Split segments into chunks
+        for (int i = 0; i < segments.size(); i += MAX_SEGMENTS_PER_CHUNK) {
+            int endIndex = Math.min(i + MAX_SEGMENTS_PER_CHUNK, segments.size());
+            List<TranscriptSegment> chunk = segments.subList(i, endIndex);
+            
+            // Process this chunk
+            List<TranscriptSegment> cleanedChunk = processChunk(chunk);
+            result.addAll(cleanedChunk);
+            
+            // Add a small delay between chunks to avoid rate limiting
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Processing interrupted", e);
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Process a single chunk of transcript segments.
+     * @param chunk List of segments to process
+     * @return List of cleaned segments
+     */
+    private List<TranscriptSegment> processChunk(List<TranscriptSegment> chunk) throws IOException {
+        // Serialize the chunk to JSON
+        String segmentsJson = mapper.writeValueAsString(chunk);
 
         // Build the prompt
         StringBuilder prompt = new StringBuilder();
@@ -66,7 +98,7 @@ public class TranscriptCleanerService {
             );
             return cleanedSegments;
         } catch (Exception e) {
-            System.err.println("Failed to parse AI response: " + aiResponse);
+            System.err.println("Failed to parse AI response for chunk: " + aiResponse);
             throw new IOException("Failed to parse AI response: " + e.getMessage(), e);
         }
     }
