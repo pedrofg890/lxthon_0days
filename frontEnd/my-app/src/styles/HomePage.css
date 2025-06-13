@@ -5,70 +5,96 @@
     justify-content: center;
     margin: 0 auto;
     min-height: 100vh;
-    background: #000 !important;
+    background: #343541 !important;
     width: 100vw;
     padding: 0;
 }
 
 body, html, #root {
-    background: #000 !important;
+    background: #343541 !important;
     color: #fff !important;
     min-height: 100vh;
     width: 100vw;
     margin: 0;
     padding: 0;
+    font-family: 'Söhne', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
 }
 
 .cta-main-div {
-    background-image: url("../assets/images/home-page-main-img.jpg");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background: linear-gradient(to bottom, #343541, #202123);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     padding: 12rem 2.2rem;
     width: 100%;
-    margin-top: 4.2rem;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
+    margin-top: 0;
     text-align: center;
-    line-height: 1rem;
+    line-height: 1.5;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-main-div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 .cta-main-div span {
     font-size: 1.8rem;
-    color: #fff;
+    color: #ECECF1;
+    margin-bottom: 1.6rem;
+    font-weight: 500;
 }
 
 .cta-main-div h1 {
     color: #fff;
-    font-size: 4.6rem;
-    line-height: 4.2rem;
+    font-size: 5.6rem;
+    line-height: 1.2;
+    margin-bottom: 2.4rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #fff, #ECECF1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    max-width: 800px;
 }
 
 .cta-btn-div {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 1.6rem;
+    margin-top: 2.4rem;
 }
 
 .cta-btn-div button {
-    padding: 0.8rem 1.6rem;
+    padding: 1.2rem 2.4rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.8rem;
     font-weight: 600;
-    border-radius: 5px;
-    border: 2px solid #2e080b;
-    background-color: #2e080b;
+    font-size: 1.6rem;
+    border-radius: 0.8rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    background-color: #10A37F;
     color: white;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .cta-btn-div button:hover {
-    cursor: pointer;
-    border: 2px solid white;
+    background-color: #0D8C6D;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.2);
+}
+
+.cta-btn-div button:active {
+    transform: translateY(0);
+    box-shadow: none;
 }

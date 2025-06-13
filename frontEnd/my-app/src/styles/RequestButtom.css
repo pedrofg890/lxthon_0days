@@ -1,21 +1,52 @@
 .requestButton {
-    background: #202123;
-    border: none;
-    color: #fff;
+    background: #40414F;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #ECECF1;
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 0.75rem;
+    margin-left: 0.8rem;
     cursor: pointer;
-    font-size: 2.25rem;
+    font-size: 2rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    font-family: 'Söhne', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
 }
 
 .requestButton:hover {
-    background: #353740;
+    background: #4B4C5A;
     color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    /*transform: scale(1.08);*/
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
+}
+
+.requestButton:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Primary variant */
+.requestButton.primary {
+    background: #10A37F;
+    border-color: #10A37F;
+}
+
+.requestButton.primary:hover {
+    background: #0D8C6D;
+    border-color: #0D8C6D;
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.2);
+}
+
+/* Secondary variant */
+.requestButton.secondary {
+    background: transparent;
+    border-color: rgba(255,255,255,0.2);
+}
+
+.requestButton.secondary:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.3);
 }
