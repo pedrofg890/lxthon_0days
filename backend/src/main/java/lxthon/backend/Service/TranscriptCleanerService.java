@@ -1,5 +1,6 @@
 package lxthon.backend.Service;
 
+import lombok.NonNull;
 import org.springframework.stereotype.Service;
 import lxthon.backend.Domain.TranscriptSegment;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +13,11 @@ import java.util.List;
  */
 @Service
 public class TranscriptCleanerService {
+
+    @NonNull
     private final OpenAIService openAIService;
+
+    @NonNull
     private static final String SYSTEM_PROMPT =
             "You are a deterministic, context-aware transcript cleaner. " +
                     "Given an array of raw transcript segments (each with 'startTime', 'endTime' and 'text'), you must:\n" +
@@ -22,7 +27,11 @@ public class TranscriptCleanerService {
                     "4. Preserve original meaning and non-verbal markers.\n" +
                     "5. Do NOT modify timecodes.\n" +
                     "Return a JSON array of TranscriptSegment objects.";
+
+    @NonNull
     private static final int CONTEXT_WINDOW = 3;
+
+    @NonNull
     private final ObjectMapper mapper = new ObjectMapper();
 
     //Constructor
