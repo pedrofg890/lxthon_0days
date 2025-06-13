@@ -34,7 +34,7 @@ public class VideoController {
     @NonNull
     private final SummaryGeneratorService summaryGenerator;
 
-    public VideoController(VideoService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator) {
+    public VideoController(VideoService youtubeService, VideoToSpeechService videoToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator) {
         this.youtubeService = youtubeService;
         this.videoToSpeechService = videoToSpeechService;
         this.transcriptProcessingService = transcriptProcessingService;
