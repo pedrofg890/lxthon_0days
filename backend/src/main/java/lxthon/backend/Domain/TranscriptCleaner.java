@@ -1,4 +1,4 @@
-package lxthon.backend;
+package lxthon.backend.Domain;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +12,6 @@ import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
-import lxthon.backend.Domain.TranscriptSegment;
 
 import java.io.File;
 import java.io.IOException;
