@@ -10,6 +10,7 @@ export default function HomePage() {
     const [transcript, setTranscript] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleInputChange = (e) => setUrl(e.target.value);
@@ -18,10 +19,11 @@ export default function HomePage() {
         setLoading(true);
         setError("");
         setTranscript(null);
+        setSuccess(false);
         try {
-            // Only fetch transcript using the input URL
             const transcriptData = await getTranscript(url);
             setTranscript(transcriptData);
+            setSuccess(true);
         } catch (err) {
             setError("Could not fetch transcript. Please check the URL.");
         } finally {
@@ -60,7 +62,8 @@ export default function HomePage() {
                     </button>
                 </div>
                 <div style={{ width: '100%', maxWidth: '900px', display: 'flex', gap: '1.5rem', marginTop: '1.5rem', justifyContent: 'center' }}>
-                    <button className="belowBarButton" onClick={() => navigate('/transcript')}>
+                    <button
+                        className="belowBarButton" onClick={() => navigate('/transcript')}>
                         Get Transcript
                     </button>
                     <button className="belowBarButton" onClick={() => navigate('/insights')}>
@@ -71,11 +74,8 @@ export default function HomePage() {
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
-                {transcript && (
-                    <div style={{ marginTop: '2rem', color: '#fff', background: '#232323', borderRadius: '12px', padding: '1rem', maxWidth: 700 }}>
-                        <h3>Transcript Preview:</h3>
-                        <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{Array.isArray(transcript) ? transcript.join('\n') : transcript}</pre>
-                    </div>
+                {success && (
+                    <div style={{ color: 'lightgreen', marginTop: '1rem', fontWeight: 'bold' }}>Transcript generated</div>
                 )}
             </div>
         </section>

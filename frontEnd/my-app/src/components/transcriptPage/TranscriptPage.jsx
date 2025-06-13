@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getLastTranscript } from '../../services/transcriptService';
 import '../../styles/HomePage.css';
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/GeneralButtom.css';
 
 export default function TranscriptPage() {
+    const [data, setData] = useState([]);
     const navigate = useNavigate();
-    // Example transcript data
-    const [transcript, setTranscript] = useState([
-        { startTime: '00:00', endTime: '00:10', text: 'Welcome to the video.' },
-        { startTime: '00:10', endTime: '00:20', text: 'Today we will learn about React.' },
-        { startTime: '00:20', endTime: '00:30', text: 'Let us start with components.' },
-        // ... more transcript lines ...
-    ]);
+
+    useEffect(() => {
+        // getLastTranscript is synchronous, but we want to update if the user navigates back and forth
+        const interval = setInterval(() => {
+            setData(getLastTranscript());
+        }, 500);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Map normalizedText to text for display, fallback to text if not present
+    // Use data directly for rendering
 
     return (
         <section className="transcript-page-section" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '3rem' }}>
@@ -36,7 +42,7 @@ export default function TranscriptPage() {
             }}>
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '0.7fr 0.7fr 3.6fr',
+                    gridTemplateColumns: '0.7fr 0.7fr 3fr',
                     columnGap: '0.25rem',
                     rowGap: '0.5rem',
                     fontWeight: 'bold',
@@ -44,29 +50,35 @@ export default function TranscriptPage() {
                     borderBottom: '1px solid #444',
                     paddingBottom: '0.5rem',
                     marginBottom: '1rem',
-                    fontSize: '1.5rem', // increased font size for header
+                    fontSize: '2rem',
                 }}>
                     <div>Start Time</div>
                     <div>End Time</div>
                     <div>Text</div>
                 </div>
-                {transcript.map((line, idx) => (
-                    <div key={idx} style={{
-                        display: 'grid',
-                        gridTemplateColumns: '0.7fr 0.7fr 3.6fr',
-                        columnGap: '0.25rem',
-                        rowGap: '0.5rem',
-                        color: '#fff',
-                        padding: '0.5rem 0',
-                        borderBottom: '1px solid #333',
-                        alignItems: 'center',
-                        fontSize: '1.5rem', // increased font size for rows
-                    }}>
-                        <div>{line.startTime}</div>
-                        <div>{line.endTime}</div>
-                        <div>{line.text}</div>
+                {data.length === 0 ? (
+                    <div style={{ color: '#fff', textAlign: 'center', marginTop: '2rem' }}>
+                        No transcript data to display.
                     </div>
-                ))}
+                ) : (
+                    data.map((line, idx) => (
+                        <div key={idx} style={{
+                            display: 'grid',
+                            gridTemplateColumns: '0.7fr 0.7fr 3fr',
+                            columnGap: '0.25rem',
+                            rowGap: '0.5rem',
+                            color: '#fff',
+                            padding: '0.5rem 0',
+                            borderBottom: '1px solid #333',
+                            alignItems: 'center',
+                            fontSize: '1.6rem',
+                        }}>
+                            <div>{line.startTime}</div>
+                            <div>{line.endTime}</div>
+                            <div>{line.normalizedText}</div>
+                        </div>
+                    ))
+                )}
             </div>
         </section>
     );
