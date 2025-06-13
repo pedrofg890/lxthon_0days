@@ -1,4 +1,4 @@
-package lxthon.backend;
+package lxthon.backend.Domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
