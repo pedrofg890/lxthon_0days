@@ -19,7 +19,7 @@ import lxthon.backend.Service.YoutubeService;
 
 @RestController
 @RequestMapping("/api/videos")
-public class YoutubeController {
+public class VideoController {
 
     @NonNull
     private final YoutubeService youtubeService;
@@ -30,7 +30,7 @@ public class YoutubeController {
     @NonNull
     private final TranscriptProcessingService transcriptProcessingService;
 
-    public YoutubeController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService) {
+    public VideoController(YoutubeService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService) {
         this.youtubeService = youtubeService;
         this.textToSpeechService = textToSpeechService;
         this.transcriptProcessingService = transcriptProcessingService;
