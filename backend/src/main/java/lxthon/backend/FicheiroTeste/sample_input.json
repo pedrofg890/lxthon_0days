@@ -1,0 +1,5 @@
+[
+  { "start": 0.0, "duration": 2.0, "text": "um hello world uh" },
+  { "start": 2.0, "duration": 3.0, "text": "this is a test you know" },
+  { "start": 5.0, "duration": 2.5, "text": "[laugh] it's working" }
+]
