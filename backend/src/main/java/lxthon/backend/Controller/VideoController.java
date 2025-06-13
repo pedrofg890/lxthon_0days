@@ -6,9 +6,9 @@ import java.util.concurrent.CompletableFuture;
 
 import lombok.NonNull;
 import lxthon.backend.Service.SummaryGeneratorService;
-import lxthon.backend.Service.TextToSpeechService;
 import lxthon.backend.Service.TranscriptCleanerService;
 import lxthon.backend.Service.TranscriptProcessingService;
+import lxthon.backend.Service.PodcastGeneration.VideoToSpeechService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,7 @@ public class VideoController {
     private final VideoService youtubeService;
 
     @NonNull
-    private final TextToSpeechService textToSpeechService;
+    private final VideoToSpeechService videoToSpeechService;
 
     @NonNull
     private final TranscriptProcessingService transcriptProcessingService;
@@ -36,7 +36,7 @@ public class VideoController {
 
     public VideoController(VideoService youtubeService, TextToSpeechService textToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator) {
         this.youtubeService = youtubeService;
-        this.textToSpeechService = textToSpeechService;
+        this.videoToSpeechService = videoToSpeechService;
         this.transcriptProcessingService = transcriptProcessingService;
         this.summaryGenerator = summaryGenerator;
     }
@@ -62,21 +62,6 @@ public class VideoController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PostMapping(value = "/synthesize", produces = "audio/mpeg")
-    public ResponseEntity<byte[]> synthesize(@RequestBody String text) {
-        try {
-            byte[] audioBytes = textToSpeechService.synthesizeText(text);
-
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"output.mp3\"")
-                    .contentType(MediaType.valueOf("audio/mpeg"))
-                    .body(audioBytes);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(null);
         }
     }
 

@@ -9,9 +9,9 @@ export default function TranscriptPage() {
     const navigate = useNavigate();
     // Example transcript data
     const [transcript, setTranscript] = useState([
-        { timestamp: '00:00', text: 'Welcome to the video.' },
-        { timestamp: '00:10', text: 'Today we will learn about React.' },
-        { timestamp: '00:20', text: 'Let us start with components.' },
+        { startTime: '00:00', endTime: '00:10', text: 'Welcome to the video.' },
+        { startTime: '00:10', endTime: '00:20', text: 'Today we will learn about React.' },
+        { startTime: '00:20', endTime: '00:30', text: 'Let us start with components.' },
         // ... more transcript lines ...
     ]);
 
@@ -25,46 +25,48 @@ export default function TranscriptPage() {
             </div>
             <div style={{
                 display: 'flex',
-                flexDirection: 'row',
+                flexDirection: 'column',
                 width: '100%',
                 maxWidth: '900px',
                 background: '#232323',
                 borderRadius: '18px',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-                overflow: 'hidden',
+                padding: '2rem',
+                marginBottom: '2rem',
             }}>
-                {/* Left column: Timestamps */}
                 <div style={{
-                    flex: '0 0 120px',
-                    background: '#1a1a1a',
-                    color: '#aaa',
-                    padding: '2rem 1rem',
-                    borderRight: '1px solid #333',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    fontSize: '1.5rem',
-                    gap: '1.5rem',
-                }}>
-                    {transcript.map((line, idx) => (
-                        <span key={idx}>{line.timestamp}</span>
-                    ))}
-                </div>
-                {/* Right column: Transcript text */}
-                <div style={{
-                    flex: 1,
+                    display: 'grid',
+                    gridTemplateColumns: '0.7fr 0.7fr 3.6fr',
+                    columnGap: '0.25rem',
+                    rowGap: '0.5rem',
+                    fontWeight: 'bold',
                     color: '#fff',
-                    padding: '2rem',
-                    fontSize: '1.5rem',
-                    lineHeight: 1.7,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1.5rem',
+                    borderBottom: '1px solid #444',
+                    paddingBottom: '0.5rem',
+                    marginBottom: '1rem',
+                    fontSize: '1.5rem', // increased font size for header
                 }}>
-                    {transcript.map((line, idx) => (
-                        <span key={idx}>{line.text}</span>
-                    ))}
+                    <div>Start Time</div>
+                    <div>End Time</div>
+                    <div>Text</div>
                 </div>
+                {transcript.map((line, idx) => (
+                    <div key={idx} style={{
+                        display: 'grid',
+                        gridTemplateColumns: '0.7fr 0.7fr 3.6fr',
+                        columnGap: '0.25rem',
+                        rowGap: '0.5rem',
+                        color: '#fff',
+                        padding: '0.5rem 0',
+                        borderBottom: '1px solid #333',
+                        alignItems: 'center',
+                        fontSize: '1.5rem', // increased font size for rows
+                    }}>
+                        <div>{line.startTime}</div>
+                        <div>{line.endTime}</div>
+                        <div>{line.text}</div>
+                    </div>
+                ))}
             </div>
         </section>
     );
