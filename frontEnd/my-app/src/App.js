@@ -1,16 +1,11 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AppRoutes from "./AppRoutes";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          What can I help with?
-        </p>
-
-      </header>
-    </div>
+      <Router>
+          <AppRoutes />
+      </Router>
   );
 }
 
