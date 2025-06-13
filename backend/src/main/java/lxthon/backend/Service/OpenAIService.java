@@ -37,16 +37,7 @@ public class OpenAIService {
                 .endpoint(endpoint)
                 .buildClient();
 
-        String systemMessage = "You are a helpful assistant for a social media platform. " +
-                "You should only answer questions related to social media features, user interactions, " +
-                "content sharing, profiles, messaging, privacy settings, community guidelines, " +
-                "and platform-specific functionality. " +
-                "If a user asks about topics unrelated to social media or this platform, " +
-                "politely redirect them to platform-related topics and suggest they contact " +
-                "general support for other questions.";
-
         List<ChatRequestMessage> chatMessages = Arrays.asList(
-                new ChatRequestSystemMessage(systemMessage),
                 new ChatRequestUserMessage(prompt)
         );
 
