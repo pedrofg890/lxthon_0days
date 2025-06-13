@@ -47,16 +47,14 @@ public class PodcastController {
     }
 
     @PostMapping("/generate-podcast")
-    public ResponseEntity<Map<String, Object>> generatePodcast(@RequestBody PodcastRequest request) {
+    public ResponseEntity<Map<String, Object>> generatePodcast(@RequestParam String url,
+                                                               @RequestParam(required = false, defaultValue = "Sofia") String hostA,
+                                                               @RequestParam(required = false, defaultValue = "Miguel") String hostB) {
         try {
-            log.info("Received podcast generation request for URL: {}", request.getVideoUrl());
+            log.info("Received podcast generation request for URL: {}", url);
 
             // Generate the podcast
-            PodcastService.PodcastResult result = podcastService.generatePodcastFromVideo(
-                    request.getVideoUrl(),
-                    request.getHostAName() != null ? request.getHostAName() : "Alex",
-                    request.getHostBName() != null ? request.getHostBName() : "Sam"
-            );
+            PodcastService.PodcastResult result = podcastService.generatePodcastFromVideo(url, hostA, hostB);
 
             // Create response
             Map<String, Object> response = new HashMap<>();
@@ -77,43 +75,4 @@ public class PodcastController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
-    @PostMapping("/generate-podcast-audio")
-    public ResponseEntity<byte[]> generatePodcastAudio(@RequestBody PodcastRequest request) {
-        try {
-            log.info("Generating podcast audio for URL: {}", request.getVideoUrl());
-
-            PodcastService.PodcastResult result = podcastService.generatePodcastFromVideo(
-                    request.getVideoUrl(),
-                    request.getHostAName() != null ? request.getHostAName() : "Alex",
-                    request.getHostBName() != null ? request.getHostBName() : "Sam"
-            );
-
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"podcast.mp3\"")
-                    .contentType(MediaType.valueOf("audio/mpeg"))
-                    .body(result.getAudio());
-
-        } catch (Exception e) {
-            log.error("Error generating podcast audio", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-    // DTO para o request
-    public static class PodcastRequest {
-        private String videoUrl;
-        private String hostAName;
-        private String hostBName;
-
-        // Getters e setters
-        public String getVideoUrl() { return videoUrl; }
-        public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
-
-        public String getHostAName() { return hostAName; }
-        public void setHostAName(String hostAName) { this.hostAName = hostAName; }
-
-        public String getHostBName() { return hostBName; }
-        public void setHostBName(String hostBName) { this.hostBName = hostBName; }
-    }
-} 
+}
