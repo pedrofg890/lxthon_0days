@@ -83,6 +83,13 @@
 		</dependency>
 	</dependencyManagement>
 
+	<repositories>
+		<repository>
+			<id>gotan-os</id>
+			<url>https://repository.dev.gotan.io/repository/gotan.os/</url>
+		</repository>
+	</repositories>
+
 	<build>
 		<plugins>
 			<plugin>
