@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getSummary } from '../../services/insightsService';
 import '../../styles/HomePage.css';
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
@@ -7,8 +8,17 @@ import '../../styles/GeneralButtom.css';
 
 export default function InsightsPage() {
     const navigate = useNavigate();
+    const [summary, setSummary] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-
+    React.useEffect(() => {
+        setLoading(true);
+        getSummary()
+            .then(data => setSummary(data))
+            .catch(err => setError("Could not fetch summary."))
+            .finally(() => setLoading(false));
+    }, []);
 
     return (
         <section className="transcript-page-section" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '3rem' }}>
@@ -42,15 +52,19 @@ export default function InsightsPage() {
                     minHeight: '300px',
                 }}>
                     <div style={{ width: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                        <ul style={{ listStyle: 'disc', color: '#fff', paddingLeft: '1.5rem', margin: 0, fontSize: '1.5rem', lineHeight: 2, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                            <li><strong>Symmetry in Physics:</strong> Many physical laws are based on symmetry principles, such as conservation of energy and momentum, which are deeply connected to Noether's theorem.</li>
-                            <li><strong>Wave-Particle Duality:</strong> Quantum mechanics reveals that particles like electrons exhibit both wave-like and particle-like properties, challenging classical intuition.</li>
-                            <li><strong>Mathematical Models:</strong> Differential equations, such as Schrödinger's equation and Maxwell's equations, are fundamental tools for describing physical phenomena.</li>
-                            <li><strong>Dimensional Analysis:</strong> This technique helps physicists check the consistency of equations and derive relationships between physical quantities.</li>
-                            <li><strong>Group Theory:</strong> Used extensively in quantum mechanics and particle physics to describe symmetries and conservation laws.</li>
-                            <li><strong>Fourier Analysis:</strong> Decomposes complex signals into simpler sinusoidal components, essential in solving partial differential equations in physics.</li>
-                            <li><strong>Topology in Physics:</strong> Concepts from topology explain phenomena like the quantum Hall effect and topological insulators.</li>
-                        </ul>
+                        {loading ? (
+                            <div style={{ color: '#fff', fontSize: '1.5rem' }}>Loading...</div>
+                        ) : error ? (
+                            <div style={{ color: 'red', fontSize: '1.5rem' }}>{error}</div>
+                        ) : summary.length === 0 ? (
+                            <div style={{ color: '#fff', fontSize: '1.5rem' }}>No summary available.</div>
+                        ) : (
+                            <ul style={{ listStyle: 'disc', color: '#fff', paddingLeft: '1.5rem', margin: 0, fontSize: '1.5rem', lineHeight: 2, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                                {summary.map((item, idx) => (
+                                    <li key={idx}>{item}</li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </div>
             </div>

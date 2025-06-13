@@ -1,7 +1,7 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/videos';
 
-export async function getTranscript() {
-    const response = await fetch(`${API_URL}/insights`);
+export async function getSummary() {
+    const response = await fetch(`${API_URL}/summary`);
     const data = await response.json();
     if (!response.ok) {
         throw new Error('Failed to fetch insights');

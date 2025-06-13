@@ -67,10 +67,10 @@ export default function HomePage() {
                         Get Transcript
                     </button>
                     <button className="belowBarButton" onClick={() => navigate('/insights')}>
-                        Get Insights
+                        Get Summary
                     </button>
                     <button className="belowBarButton" onClick={() => navigate('/quizz')}>
-                        Generate Test
+                        Generate Quizz
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
