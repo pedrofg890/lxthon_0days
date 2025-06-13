@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
 
 import org.springframework.stereotype.Service;
 
@@ -43,101 +44,157 @@ public class YoutubeService {
     }
     
     public List<TranscriptSegment> getTranscript(String url) throws IOException, InterruptedException {
-        // Create a temporary file with .srt extension
-        File tempFile = File.createTempFile("transcript", ".srt");
-        String tempFilePath = tempFile.getAbsolutePath();
-        System.out.println("Creating transcript file at: " + tempFilePath);
+        // Ensure URL has proper protocol
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://" + url;
+        }
+        
+        // Create a temporary directory instead of a specific file
+        File tempDir = Files.createTempDirectory("yt-dlp-subtitles").toFile();
+        System.out.println("Creating transcript files in directory: " + tempDir.getAbsolutePath());
         
         List<String> command = new ArrayList<>();
         command.add(ytDlpPath);
         command.add(url);
+        command.add("--skip-download");
         command.add("--write-auto-sub");
         command.add("--sub-lang");
         command.add("en");
-        command.add("--write-sub");
         command.add("--sub-format");
-        command.add("srt");
+        command.add("vtt");
         command.add("--output");
-        command.add(tempFilePath);
+        command.add(tempDir.getAbsolutePath() + File.separator + "%(title)s.%(ext)s");
+        command.add("--verbose");
+        
+        // Debug: Print the exact command being executed
+        System.out.println("Executing command: " + String.join(" ", command));
         
         // Execute the command to download the transcript
         String output = executeCommand(command);
         System.out.println("yt-dlp output: " + output);
         
-        // Check if the file was created
-        if (!tempFile.exists()) {
-            throw new IOException("Failed to create transcript file. yt-dlp output: " + output);
+        // Find the created .vtt file in the temp directory
+        File[] vttFiles = tempDir.listFiles((dir, name) -> name.endsWith(".vtt"));
+        
+        if (vttFiles == null || vttFiles.length == 0) {
+            throw new IOException("No VTT subtitle files were created. yt-dlp output: " + output);
         }
         
-        // Read and parse the SRT file
+        File subtitleFile = vttFiles[0]; // Take the first .vtt file found
+        System.out.println("Found subtitle file: " + subtitleFile.getAbsolutePath());
+        
+        if (subtitleFile.length() == 0) {
+            throw new IOException("Subtitle file is empty. yt-dlp output: " + output);
+        }
+        
+        // Now read the file and parse it
         List<TranscriptSegment> segments = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(tempFile))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(subtitleFile))) {
             String line;
             TranscriptSegment currentSegment = null;
             StringBuilder textBuilder = new StringBuilder();
+            boolean isHeader = true;
+            boolean isInSegment = false;
             
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 
+                // Skip header lines (WEBVTT and empty lines at start)
+                if (isHeader) {
+                    if (line.isEmpty() || line.startsWith("WEBVTT")) {
+                        continue;
+                    }
+                    isHeader = false;
+                }
+                
                 // Skip empty lines
                 if (line.isEmpty()) {
-                    if (currentSegment != null) {
+                    if (currentSegment != null && isInSegment) {
                         currentSegment.setText(textBuilder.toString().trim());
                         segments.add(currentSegment);
                         currentSegment = null;
                         textBuilder = new StringBuilder();
+                        isInSegment = false;
                     }
-                    continue;
-                }
-                
-                // Parse segment number
-                if (currentSegment == null) {
-                    currentSegment = new TranscriptSegment();
                     continue;
                 }
                 
                 // Parse timestamp
                 if (line.contains("-->")) {
+                    currentSegment = new TranscriptSegment();
                     String[] times = line.split("-->");
                     String startTimeStr = times[0].trim();
                     String endTimeStr = times[1].trim();
                     
-                    // Convert SRT time format (HH:MM:SS,mmm) to seconds
-                    currentSegment.setStartTime(convertSrtTimeToSeconds(startTimeStr));
-                    currentSegment.setEndTime(convertSrtTimeToSeconds(endTimeStr));
+                    // Remove any VTT positioning/styling info (everything after the timestamp)
+                    startTimeStr = startTimeStr.split("\\s+")[0];
+                    endTimeStr = endTimeStr.split("\\s+")[0];
+                    
+                    // Convert VTT time format (HH:MM:SS.mmm) to seconds
+                    currentSegment.setStartTime(convertTimeToSeconds(startTimeStr, '.'));
+                    currentSegment.setEndTime(convertTimeToSeconds(endTimeStr, '.'));
+                    isInSegment = true;
                     continue;
                 }
                 
                 // Add text to current segment
-                if (currentSegment != null) {
-                    textBuilder.append(line).append(" ");
+                if (currentSegment != null && isInSegment) {
+                    if (textBuilder.length() > 0) {
+                        textBuilder.append(" ");
+                    }
+                    textBuilder.append(line);
                 }
             }
             
             // Add the last segment if exists
-            if (currentSegment != null) {
+            if (currentSegment != null && isInSegment) {
                 currentSegment.setText(textBuilder.toString().trim());
                 segments.add(currentSegment);
             }
+        } catch (Exception e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            throw new IOException("Error reading transcript file: " + e.getMessage(), e);
         } finally {
-            // Clean up the temporary file
-            if (tempFile.exists()) {
-                tempFile.delete();
+            // Clean up the temporary directory and its contents
+            if (tempDir.exists()) {
+                File[] files = tempDir.listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        file.delete();
+                    }
+                }
+                tempDir.delete();
             }
+        }
+        
+        if (segments.isEmpty()) {
+            throw new IOException("No transcript segments were found in the file");
         }
         
         return segments;
     }
     
-    private double convertSrtTimeToSeconds(String srtTime) {
-        // Format: HH:MM:SS,mmm
-        String[] parts = srtTime.split("[:,]");
-        int hours = Integer.parseInt(parts[0]);
-        int minutes = Integer.parseInt(parts[1]);
-        int seconds = Integer.parseInt(parts[2]);
-        int milliseconds = Integer.parseInt(parts[3]);
+    private double convertTimeToSeconds(String timeStr, char millisSeparator) {
+        // Remove any positioning/styling info that might be appended (like "align:start", "line:869", etc.)
+        timeStr = timeStr.split("\\s+")[0]; // Take only the first part (the actual timestamp)
         
-        return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0;
+        // Format: HH:MM:SS,mmm or HH:MM:SS.mmm
+        String[] parts = timeStr.split("[:\\" + millisSeparator + "]");
+        
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid time format: " + timeStr);
+        }
+        
+        try {
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            int seconds = Integer.parseInt(parts[2]);
+            int milliseconds = Integer.parseInt(parts[3]);
+            
+            return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Could not parse time components from: " + timeStr, e);
+        }
     }
     
     private String executeCommand(List<String> command) throws IOException, InterruptedException {
