@@ -42,8 +42,8 @@ export default function TranscriptPage() {
                     borderRight: '1px solid #333',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    fontSize: '1.1rem',
+                    alignItems: 'center',
+                    fontSize: '1.5rem',
                     gap: '1.5rem',
                 }}>
                     {transcript.map((line, idx) => (
@@ -55,7 +55,7 @@ export default function TranscriptPage() {
                     flex: 1,
                     color: '#fff',
                     padding: '2rem',
-                    fontSize: '1.15rem',
+                    fontSize: '1.5rem',
                     lineHeight: 1.7,
                     display: 'flex',
                     flexDirection: 'column',
