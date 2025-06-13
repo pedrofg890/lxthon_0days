@@ -39,6 +39,7 @@ public class YoutubeController {
     public ResponseEntity<List<TranscriptSegment>> getTranscript(@RequestParam String url) throws IOException, InterruptedException {
         try {
             List<TranscriptSegment> transcript = youtubeService.getTranscript(url);
+            System.out.println(transcript);
             return ResponseEntity.ok(transcript);
         } catch (Exception e) {
             e.printStackTrace();

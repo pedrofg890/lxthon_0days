@@ -46,6 +46,7 @@ public class YoutubeService {
         // Create a temporary file with .srt extension
         File tempFile = File.createTempFile("transcript", ".srt");
         String tempFilePath = tempFile.getAbsolutePath();
+        System.out.println("Creating transcript file at: " + tempFilePath);
         
         List<String> command = new ArrayList<>();
         command.add(ytDlpPath);
@@ -61,6 +62,7 @@ public class YoutubeService {
         
         // Execute the command to download the transcript
         String output = executeCommand(command);
+        System.out.println("yt-dlp output: " + output);
         
         // Check if the file was created
         if (!tempFile.exists()) {
