@@ -12,6 +12,7 @@ import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
+import lxthon.backend.Domain.TranscriptSegment;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,29 +21,24 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Deterministic, context-aware transcript cleaner using ChatGPT-4.0 API.
+ * TranscriptCleaner utilizando ChatGPT-4.0 API e TranscriptSegment.
  *
- * Loads a YouTube transcript JSON (array of {start, duration, text}),
- * sends each segment (with context) to ChatGPT-4.0 for normalization,
- * and outputs a cleaned transcript JSON preserving original timecodes.
+ * Lê um JSON de segmentos brutos ({start, duration, text}),
+ * aplica limpeza/contextualização via ChatGPT-4.0,
+ * e produz JSON com campos {startTime, endTime, text, normalizedText}.
  */
 public class TranscriptCleaner {
-    // System prompt for ChatGPT
     private static final String SYSTEM_PROMPT =
             "You are a deterministic, context-aware transcript cleaner. " +
                     "Given an array of raw YouTube transcript segments (each with 'start' and 'duration'), you must:\n" +
-                    "1. Remove filler words and disfluencies (e.g., “um,” “uh,” “you know,” “like”).\n" +
+                    "1. Remove filler words and disfluencies (e.g., 'um,' 'uh,' 'you know,' 'like').\n" +
                     "2. Restore proper punctuation, capitalization, and paragraph breaks for readability.\n" +
-                    "3. Normalize numbers, dates, acronyms, and special terminology consistently (e.g., “5k” → “five thousand”, “AI” → “artificial intelligence”).\n" +
+                    "3. Normalize numbers, dates, acronyms, and special terminology consistently (e.g., '5k' → 'five thousand', 'AI' → 'artificial intelligence').\n" +
                     "4. Preserve the speaker’s original meaning, emphasis, and any non-verbal markers (e.g., [laugh], [applause]).\n" +
-                    "5. Do NOT modify or remove timecodes; keep 'start' and 'duration' unchanged.\n" +
-                    "Output a JSON array of segments, each object with:\n" +
-                    "  - 'start': original start time in seconds (float),\n" +
-                    "  - 'end': start + duration (float),\n" +
-                    "  - 'text': the cleaned, normalized transcript text.\n" +
-                    "Ensure deterministic output by setting temperature=0.0 and a fixed max_tokens limit.";
+                    "5. Do NOT modify or remove timecodes; keep 'startTime' and 'endTime' unchanged.\n" +
+                    "Output a JSON array of TranscriptSegment objects, each with startTime, endTime, text, normalizedText.\n" +
+                    "Ensure deterministic output with temperature=0.0 and fixed max_tokens.";
 
-    // Use your OpenAI/ChatGPT API key
     private static final String API_KEY = System.getenv("OPENAI_API_KEY");
     private static final String ENDPOINT = System.getenv("CHATGPT_ENDPOINT");
     private static final int CONTEXT_WINDOW = 3;
@@ -56,31 +52,48 @@ public class TranscriptCleaner {
         File input = new File(args[0]);
         File output = new File(args[1]);
 
-        List<Segment> segments = mapper.readValue(input, new TypeReference<List<Segment>>() {});
-        List<Segment> cleaned = cleanTranscript(segments);
+        // Carrega segmentos brutos do JSON de entrada
+        List<Map<String, Object>> rawSegments = mapper.readValue(
+                input, new TypeReference<List<Map<String, Object>>>(){});
+        List<TranscriptSegment> segments = new ArrayList<>();
+        for (Map<String, Object> raw : rawSegments) {
+            double start = ((Number) raw.get("start")).doubleValue();
+            double duration = ((Number) raw.get("duration")).doubleValue();
+            String text = (String) raw.get("text");
+            double end = start + duration;
+            segments.add(new TranscriptSegment(start, end, text, null));
+        }
+
+        // Executa limpeza/contextualização
+        List<TranscriptSegment> cleaned = cleanTranscript(segments);
+
+        // Grava resultado em JSON
         mapper.writerWithDefaultPrettyPrinter().writeValue(output, cleaned);
         System.out.println("Cleaned transcript written to " + output.getPath());
     }
 
-    public static List<Segment> cleanTranscript(List<Segment> segments) throws IOException {
-        List<Segment> result = new ArrayList<>();
+    public static List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
+        List<TranscriptSegment> result = new ArrayList<>();
         for (int i = 0; i < segments.size(); i++) {
-            StringBuilder fullPrompt = new StringBuilder();
-            fullPrompt.append(SYSTEM_PROMPT).append("\n\n");
+            TranscriptSegment seg = segments.get(i);
 
-            int startContext = Math.max(0, i - CONTEXT_WINDOW);
-            for (int j = startContext; j < i; j++) {
-                Segment ctx = segments.get(j);
-                fullPrompt.append(String.format("[%.2f→%.2f] %s\n",
-                        ctx.getStart(), ctx.getStart() + ctx.getDuration(), ctx.getText()));
+            // Constrói prompt com contexto
+            StringBuilder prompt = new StringBuilder();
+            prompt.append(SYSTEM_PROMPT).append("\n\n");
+            int startCtx = Math.max(0, i - CONTEXT_WINDOW);
+            for (int j = startCtx; j < i; j++) {
+                TranscriptSegment ctx = segments.get(j);
+                prompt.append(String.format("[%.2f→%.2f] %s\n",
+                        ctx.getStartTime(), ctx.getEndTime(), ctx.getText()));
             }
+            prompt.append(String.format("[%.2f→%.2f] Target: %s\nNormalized:",
+                    seg.getStartTime(), seg.getEndTime(), seg.getText()));
 
-            Segment seg = segments.get(i);
-            fullPrompt.append(String.format("[%.2f→%.2f] Target: %s\nNormalized:",
-                    seg.getStart(), seg.getStart() + seg.getDuration(), seg.getText()));
-
-            String normalized = callChatGPT(fullPrompt.toString()).trim();
-            result.add(new Segment(seg.getStart(), seg.getDuration(), normalized));
+            String norm = callChatGPT(prompt.toString()).trim();
+            // Preenche normalizedText
+            result.add(new TranscriptSegment(
+                    seg.getStartTime(), seg.getEndTime(), seg.getText(), norm
+            ));
         }
         return result;
     }
@@ -96,50 +109,29 @@ public class TranscriptCleaner {
             post.addHeader("Authorization", "Bearer " + API_KEY);
             post.addHeader("Content-Type", "application/json");
 
-            // Use chatgpt-4.0 model
             Map<String, Object> payload = Map.of(
                     "model", "chatgpt40",
                     "prompt", prompt,
                     "temperature", 0.0,
                     "max_tokens", 512
             );
-            StringEntity entity = new StringEntity(mapper.writeValueAsString(payload), ContentType.APPLICATION_JSON);
-            post.setEntity(entity);
+            post.setEntity(new StringEntity(mapper.writeValueAsString(payload), ContentType.APPLICATION_JSON));
 
-            try (CloseableHttpResponse response = client.execute(post)) {
+            try (CloseableHttpResponse resp = client.execute(post)) {
                 String body;
                 try {
-                    body = EntityUtils.toString(response.getEntity());
+                    body = EntityUtils.toString(resp.getEntity());
                 } catch (ParseException e) {
                     throw new IOException("Error reading response entity", e);
                 }
-                Map<String, Object> json = mapper.readValue(body, new TypeReference<>() {});
+                Map<String, Object> json = mapper.readValue(body, new TypeReference<>(){});
                 @SuppressWarnings("unchecked")
-                List<Map<String, String>> choices = (List<Map<String, String>>) json.get("choices");
+                List<Map<String, String>> choices =
+                        (List<Map<String, String>>) json.get("choices");
                 return choices.get(0).get("text");
             }
-
         } catch (IOException e) {
             throw new IOException("Error calling ChatGPT API", e);
         }
-    }
-
-    public static class Segment {
-        private double start;
-        private double duration;
-        private String text;
-
-        public Segment() { }
-        public Segment(double start, double duration, String text) {
-            this.start = start;
-            this.duration = duration;
-            this.text = text;
-        }
-        public double getStart() { return start; }
-        public void setStart(double start) { this.start = start; }
-        public double getDuration() { return duration; }
-        public void setDuration(double duration) { this.duration = duration; }
-        public String getText() { return text; }
-        public void setText(String text) { this.text = text; }
     }
 }
