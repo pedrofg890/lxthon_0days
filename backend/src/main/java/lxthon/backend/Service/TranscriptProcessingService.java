@@ -1,9 +1,11 @@
 package lxthon.backend.Service;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import lxthon.backend.Domain.TranscriptSegment;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * TranscriptProcessingService: orchestrates transcript extraction and cleaning.
@@ -26,14 +28,18 @@ public class TranscriptProcessingService {
      * @param url YouTube video URL
      * @return List of cleaned TranscriptSegment objects with both text and normalizedText populated
      */
-    public List<TranscriptSegment> getCleanedTranscript(String url) throws IOException, InterruptedException {        
+    @Async
+    public CompletableFuture<List<TranscriptSegment>> getCleanedTranscript(String url)
+            throws IOException, InterruptedException {
+
         // Step 1: Extract raw transcript from YouTube
         List<TranscriptSegment> rawTranscript = youtubeService.getTranscript(url);
-        
+
         // Step 2: Clean the transcript using AI
         List<TranscriptSegment> cleanedTranscript = transcriptCleanerService.cleanTranscript(rawTranscript);
-        
-        return cleanedTranscript;
+
+        // Step 3: Wrap the result in a CompletableFuture
+        return CompletableFuture.completedFuture(cleanedTranscript);
     }
     
     /**

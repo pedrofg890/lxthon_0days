@@ -2,6 +2,7 @@ package lxthon.backend.Controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.NonNull;
 import lxthon.backend.Service.TextToSpeechService;
@@ -75,14 +76,13 @@ public class YoutubeController {
     }
 
     @GetMapping("/clean-transcript")
-    public ResponseEntity<List<TranscriptSegment>> cleanTranscript(@RequestParam String url) throws IOException {
-        try {
-            List<TranscriptSegment> cleanedTranscript = transcriptProcessingService.getCleanedTranscript(url);
-            return ResponseEntity.ok(cleanedTranscript);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public CompletableFuture<ResponseEntity<List<TranscriptSegment>>> cleanTranscript(@RequestParam String url) throws IOException, InterruptedException {
+        return transcriptProcessingService.getCleanedTranscript(url)
+                .thenApply(cleanedTranscript -> ResponseEntity.ok(cleanedTranscript))
+                .exceptionally(ex -> {
+                    ex.printStackTrace();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                });
     }
 }
 
