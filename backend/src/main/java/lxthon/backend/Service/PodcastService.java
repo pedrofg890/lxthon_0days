@@ -1,14 +1,11 @@
 package lxthon.backend.Service;
 
 import lombok.NonNull;
-import lxthon.backend.Domain.TranscriptSegment;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 
 @Service
 public class PodcastService {
-
-    // Inject YoutubeService, OpenAIService, ElevenLabsService, etc.
 
     @NonNull
     private final YoutubeService youtubeService;
@@ -16,13 +13,14 @@ public class PodcastService {
     @NonNull
     private final OpenAIService openAIService;
 
+    //@NonNull
+    //private final ElevenLabsService elevenLabsService;
+
     public PodcastService(@NonNull YoutubeService youtubeService, @NonNull OpenAIService openAIService) {
         this.youtubeService = youtubeService;
         this.openAIService = openAIService;
     }
 
-    //@NonNull
-    //private final ElevenLabsService elevenLabsService;
 
 
 //    public byte[] createPodcastFromYoutube(String url) throws Exception {
