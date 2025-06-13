@@ -1,0 +1,74 @@
+.home-page-cta-section {
+    max-width: 120rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #000 !important;
+    width: 100vw;
+    padding: 0;
+}
+
+body, html, #root {
+    background: #000 !important;
+    color: #fff !important;
+    min-height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+.cta-main-div {
+    background-image: url("../assets/images/home-page-main-img.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 12rem 2.2rem;
+    width: 100%;
+    margin-top: 4.2rem;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    text-align: center;
+    line-height: 1rem;
+}
+
+.cta-main-div span {
+    font-size: 1.8rem;
+    color: #fff;
+}
+
+.cta-main-div h1 {
+    color: #fff;
+    font-size: 4.6rem;
+    line-height: 4.2rem;
+}
+
+.cta-btn-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cta-btn-div button {
+    padding: 0.8rem 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    font-weight: 600;
+    border-radius: 5px;
+    border: 2px solid #2e080b;
+    background-color: #2e080b;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.cta-btn-div button:hover {
+    cursor: pointer;
+    border: 2px solid white;
+}

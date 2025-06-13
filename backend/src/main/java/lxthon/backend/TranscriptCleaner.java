@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Deterministic, context-aware transcript cleaner using LEKCHAT AI API.
+ * Deterministic, context-aware transcript cleaner using ChatGPT-4.0 API.
  *
  * Loads a YouTube transcript JSON (array of {start, duration, text}),
- * sends each segment (with context) to LEKCHAT for normalization,
+ * sends each segment (with context) to ChatGPT-4.0 for normalization,
  * and outputs a cleaned transcript JSON preserving original timecodes.
  */
 public class TranscriptCleaner {
-    // System prompt for LEKCHAT
+    // System prompt for ChatGPT
     private static final String SYSTEM_PROMPT =
             "You are a deterministic, context-aware transcript cleaner. " +
                     "Given an array of raw YouTube transcript segments (each with 'start' and 'duration'), you must:\n" +
@@ -42,8 +42,9 @@ public class TranscriptCleaner {
                     "  - 'text': the cleaned, normalized transcript text.\n" +
                     "Ensure deterministic output by setting temperature=0.0 and a fixed max_tokens limit.";
 
-    private static final String API_KEY = System.getenv("LEKCHAT_API_KEY");
-    private static final String ENDPOINT = System.getenv("LEKCHAT_ENDPOINT");
+    // Use your OpenAI/ChatGPT API key
+    private static final String API_KEY = System.getenv("OPENAI_API_KEY");
+    private static final String ENDPOINT = System.getenv("CHATGPT_ENDPOINT");
     private static final int CONTEXT_WINDOW = 3;
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -78,13 +79,13 @@ public class TranscriptCleaner {
             fullPrompt.append(String.format("[%.2f→%.2f] Target: %s\nNormalized:",
                     seg.getStart(), seg.getStart() + seg.getDuration(), seg.getText()));
 
-            String normalized = callLeksChat(fullPrompt.toString()).trim();
+            String normalized = callChatGPT(fullPrompt.toString()).trim();
             result.add(new Segment(seg.getStart(), seg.getDuration(), normalized));
         }
         return result;
     }
 
-    private static String callLeksChat(String prompt) throws IOException {
+    private static String callChatGPT(String prompt) throws IOException {
         try (CloseableHttpClient client = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom()
                         .setResponseTimeout(Timeout.ofSeconds(30))
@@ -95,8 +96,9 @@ public class TranscriptCleaner {
             post.addHeader("Authorization", "Bearer " + API_KEY);
             post.addHeader("Content-Type", "application/json");
 
+            // Use chatgpt-4.0 model
             Map<String, Object> payload = Map.of(
-                    "model", "lekchat-large",
+                    "model", "chatgpt40",
                     "prompt", prompt,
                     "temperature", 0.0,
                     "max_tokens", 512
@@ -118,7 +120,7 @@ public class TranscriptCleaner {
             }
 
         } catch (IOException e) {
-            throw new IOException("Error calling LEKCHAT API", e);
+            throw new IOException("Error calling ChatGPT API", e);
         }
     }
 
