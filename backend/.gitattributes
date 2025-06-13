@@ -10,3 +10,11 @@ target/
 *.iml
 .vscode/
 .eclipse/
+
+/mvnw text eol=lf
+*.cmd text eol=crlf
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
