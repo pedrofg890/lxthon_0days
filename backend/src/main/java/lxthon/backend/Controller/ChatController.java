@@ -1,7 +1,7 @@
-package lxthon.backend.controller;
+package lxthon.backend.Controller;
 
 import org.springframework.web.bind.annotation.*;
-import lxthon.backend.service.OpenAIService;
+import lxthon.backend.Service.OpenAIService;
 
 @RestController
 @RequestMapping("/api/chat")

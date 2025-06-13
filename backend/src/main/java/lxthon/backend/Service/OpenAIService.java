@@ -1,4 +1,4 @@
-package lxthon.backend.service;
+package lxthon.backend.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
