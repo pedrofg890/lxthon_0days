@@ -33,7 +33,7 @@ build/
 .vscode/
 
 ### Environment Variables ###
-.env
+backend/.env
 API_KEY.env
 *.env
 
@@ -249,7 +249,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+backend/.env
 .env.development.local
 .env.test.local
 .env.production.local
