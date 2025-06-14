@@ -6,6 +6,15 @@ import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/GeneralButtom.css';
 
+/**
+ * InsightsPage component.
+ *
+ * Displays the latest AI-generated summary (insights) fetched from the backend.
+ * It continuously polls getLastSummary() to update if the user navigates back and forth.
+ * Provides a button to navigate back to the HomePage.
+ *
+ * @component
+ */
 export default function InsightsPage() {
     const [data, setData] = useState([]);
     const navigate = useNavigate();
@@ -13,6 +22,10 @@ export default function InsightsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    /**
+     * Polls getLastSummary() every 500ms to update the displayed summary.
+     * Clears polling on unmount.
+     */
     useEffect(() => {
         // getLastTranscript is synchronous, but we want to update if the user navigates back and forth
         const interval = setInterval(() => {
