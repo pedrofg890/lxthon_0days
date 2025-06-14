@@ -31,17 +31,41 @@ public class PodcastController {
     @NonNull
     private final PodcastService podcastService;
 
+    /**
+     * Constructs a new {@code PodcastController} with the required services.
+     *
+     * @param openAIService   the service used to interact with the OpenAI API
+     * @param podcastService  the service responsible for generating podcast scripts and audio
+     */
     public PodcastController(@NotNull OpenAIService openAIService, @NonNull PodcastService podcastService) {
         this.openAIService = openAIService;
         this.podcastService = podcastService;
     }
 
+    /**
+     * Returns a raw chat completion from the OpenAI service for the given prompt.
+     * <p>
+     * This endpoint can be used to forward any prompt string directly to OpenAI
+     * and retrieve the model's completion text.
+     * </p>
+     *
+     * @param prompt the user-provided prompt to send to OpenAI
+     * @return the raw completion text returned by the OpenAI API
+     */
     @PostMapping("/completion")
     public String getChatCompletion(@RequestBody String prompt) {
         return openAIService.getChatCompletion(prompt);
     }
 
-    // for testing the OPEN-AI API
+    /**
+     * Tests connectivity to the OpenAI API by sending a simple prompt.
+     * <p>
+     * If successful, returns the model's response; otherwise returns a 400 status
+     * with the error message.
+     * </p>
+     *
+     * @return a {@code ResponseEntity} containing either the successful response or an error message
+     */
     @GetMapping("/test-openai")
     public ResponseEntity<String> testOpenAI() {
         try {
@@ -52,17 +76,36 @@ public class PodcastController {
         }
     }
 
+    /**
+     * Generates a podcast script and audio based on a YouTube video URL.
+     * <p>
+     * Accepts the video URL and optional host names for two hosts, then delegates
+     * to {@link PodcastService} to produce the script and audio file.
+     * Returns a JSON object detailing success, script text, host names,
+     * audio file size, and a status message.
+     * </p>
+     *
+     * @param url      the YouTube video URL to base the podcast on
+     * @param hostA    the name of the first host (default: "Sofia")
+     * @param hostB    the name of the second host (default: "Miguel")
+     * @return a {@code ResponseEntity} containing a map with:
+     *         <ul>
+     *           <li>success (boolean)</li>
+     *           <li>script (String)</li>
+     *           <li>hostAName (String)</li>
+     *           <li>hostBName (String)</li>
+     *           <li>audioSizeBytes (long)</li>
+     *           <li>message (String)</li>
+     *         </ul>
+     *         or an error map with success=false and an error message on failure.
+     */
     @PostMapping("/generate-podcast")
     public ResponseEntity<Map<String, Object>> generatePodcast(@RequestParam String url,
                                                                @RequestParam(required = false, defaultValue = "Sofia") String hostA,
                                                                @RequestParam(required = false, defaultValue = "Miguel") String hostB) {
         try {
             log.info("Received podcast generation request for URL: {}", url);
-
-            // Generate the podcast
             PodcastService.PodcastResult result = podcastService.generatePodcastFromVideo(url, hostA, hostB);
-
-            // Create response
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("script", result.getScript());
