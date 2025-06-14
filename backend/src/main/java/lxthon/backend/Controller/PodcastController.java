@@ -1,9 +1,7 @@
 package lxthon.backend.Controller;
 
-import lxthon.backend.Domain.TranscriptSegment;
 import lxthon.backend.Service.PodcastGeneration.PodcastService;
 import lxthon.backend.Service.PodcastGeneration.VideoToSpeechService;
-import lxthon.backend.Service.VideoService;
 import lxthon.backend.Service.VideoService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
@@ -16,7 +14,6 @@ import lxthon.backend.Service.OpenAIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -191,6 +188,11 @@ public class PodcastController {
         }
     }
 
+    /**
+     Creates the download functionality of the podcast.
+     It downloads the audio of the podcast to the user's machine if they select "Donwload Podcast"
+     */
+
     @GetMapping("/download/{podcastId}")
     public ResponseEntity<byte[]> downloadPodcast(@PathVariable String podcastId) {
         PodcastService.PodcastResult result = podcastCache.get(podcastId);
@@ -203,6 +205,11 @@ public class PodcastController {
                 .header("Content-Type", "audio/mpeg")
                 .body(result.getAudio());
     }
+
+    /**
+     Allows the user to play the podcast on the web interface.
+     It plays the podcast if they select "Stream Podcast"
+     */
 
     @GetMapping("/stream/{podcastId}")
     public ResponseEntity<byte[]> streamPodcast(@PathVariable String podcastId) {
