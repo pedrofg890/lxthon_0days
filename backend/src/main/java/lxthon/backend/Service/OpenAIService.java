@@ -23,7 +23,7 @@ public class OpenAIService {
     public OpenAIService() {
         this.key = System.getProperty("OPENAI_API_KEY");
         this.endpoint = "https://models.github.ai/inference";
-        this.model = "openai/gpt-4o-mini";
+        this.model = "meta/Llama-4-Scout-17B-16E-Instruct";
 
         if (this.key == null || this.key.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY is missing or blank.");
