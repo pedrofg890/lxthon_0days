@@ -3,7 +3,6 @@ package lxthon.backend.Controller;
 import lxthon.backend.Service.PodcastGeneration.PodcastService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import lombok.NonNull;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +12,13 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * REST controller for handling podcast-related operations.
+ * <p>
+ * Exposes endpoints for testing the OpenAI integration, obtaining chat completions,
+ * and generating a podcast script and audio based on a YouTube video URL and host names.
+ * </p>
+ */
 @RestController
 @RequestMapping("/podcast-api/chat")
 public class PodcastController {

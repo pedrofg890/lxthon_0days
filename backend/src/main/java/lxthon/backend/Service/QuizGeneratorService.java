@@ -21,9 +21,10 @@ public class QuizGeneratorService {
                     "- id (integer starting from 1)\n" +
                     "- question (string)\n" +
                     "- choices (array of 4 distinct strings)\n" +
-                    "- correctIndex (integer 0–3)\n" +
-                    "Return the result as a JSON object with two fields: 'title' (string) and 'questions' (array of QuizQuestion).";
-    //Constructor
+                    "- correctIndex (integer 0–3)\n\n" +
+                    "IMPORTANT: Return ONLY the raw JSON object with two fields, 'title' and 'questions'. " +
+                    "Do NOT include any explanations, markdown, or leading text.";
+
     public QuizGeneratorService(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
