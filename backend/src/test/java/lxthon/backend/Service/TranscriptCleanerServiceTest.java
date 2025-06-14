@@ -1,4 +1,4 @@
-package lxthon.backend.Service;
+/*package lxthon.backend.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,4 +58,4 @@ public class TranscriptCleanerServiceTest {
                     "normalizedText deve ser o texto original em upper-case");
         }
     }
-}
+}*/

@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.nio.file.Files;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import org.springframework.stereotype.Service;
 
@@ -55,16 +58,7 @@ public class VideoService {
         File tempDir = Files.createTempDirectory("yt-dlp-subtitles").toFile();
         System.out.println("Creating transcript files in directory: " + tempDir.getAbsolutePath());
         
-        try {
-            // First, check available subtitle languages
-            List<String> listSubsCommand = new ArrayList<>();
-            listSubsCommand.add(ytDlpPath);
-            listSubsCommand.add(url);
-            listSubsCommand.add("--list-subs");
-            
-            String subsInfo = executeCommand(listSubsCommand);
-            System.out.println("Available subtitles: " + subsInfo);
-            
+        try {           
             // Try to get English subtitles
             List<String> command = new ArrayList<>();
             command.add(ytDlpPath);
@@ -74,7 +68,7 @@ public class VideoService {
             command.add("--sub-lang");
             command.add("en");
             command.add("--sub-format");
-            command.add("vtt");
+            command.add("json3");
             command.add("--output");
             command.add(tempDir.getAbsolutePath() + File.separator + "%(id)s.%(ext)s");
             
@@ -84,26 +78,26 @@ public class VideoService {
             String output = executeCommand(command);
             System.out.println("yt-dlp output: " + output);
             
-            // Find the VTT file
+            // Find the JSON file
             File[] allFiles = tempDir.listFiles();
             System.out.println("All files in temp directory: " + Arrays.toString(allFiles));
             
-            File[] vttFiles = tempDir.listFiles((dir, name) -> name.endsWith(".vtt"));
+            File[] jsonFiles = tempDir.listFiles((dir, name) -> name.endsWith(".json"));
             
-            if (vttFiles == null || vttFiles.length == 0) {
+            if (jsonFiles == null || jsonFiles.length == 0) {
                 // Try to find any subtitle file
                 File[] subFiles = tempDir.listFiles((dir, name) -> 
-                    name.contains(".en.vtt") || name.endsWith(".vtt"));
+                    name.contains(".en.json") || name.endsWith(".json"));
                 
                 if (subFiles != null && subFiles.length > 0) {
-                    vttFiles = subFiles;
+                    jsonFiles = subFiles;
                 } else {
                     System.out.println("No subtitles found for video: " + url);
                     return Collections.emptyList();
                 }
             }
             
-            File subtitleFile = vttFiles[0];
+            File subtitleFile = jsonFiles[0];
             System.out.println("Processing subtitle file: " + subtitleFile.getName() + " (size: " + subtitleFile.length() + " bytes)");
             
             if (subtitleFile.length() == 0) {
@@ -111,8 +105,8 @@ public class VideoService {
                 return Collections.emptyList();
             }
             
-            // Parse the VTT file
-            List<TranscriptSegment> segments = parseVttFile(subtitleFile);
+            // Parse the JSON file
+            List<TranscriptSegment> segments = parseJsonSubtitleFile(subtitleFile);
             
             System.out.println("Successfully extracted " + segments.size() + " transcript segments");
             return segments;
@@ -133,104 +127,53 @@ public class VideoService {
         }
     }
     
-    private List<TranscriptSegment> parseVttFile(File vttFile) throws IOException {
+    private List<TranscriptSegment> parseJsonSubtitleFile(File jsonFile) throws IOException {
         List<TranscriptSegment> segments = new ArrayList<>();
         
-        try (BufferedReader reader = new BufferedReader(new FileReader(vttFile))) {
-            String line;
-            boolean skipHeader = true;
+        try (FileReader reader = new FileReader(jsonFile)) {
+            JSONObject jsonSubtitles = new JSONObject(new JSONTokener(reader));
+            JSONArray events = jsonSubtitles.getJSONArray("events");
             
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
+            for (int i = 0; i < events.length(); i++) {
+                JSONObject event = events.getJSONObject(i);
                 
-                // Skip WEBVTT header and empty lines at start
-                if (skipHeader) {
-                    if (line.isEmpty() || line.startsWith("WEBVTT") || line.startsWith("NOTE")) {
-                        continue;
-                    }
-                    skipHeader = false;
-                }
-                
-                // Skip empty lines and sequence numbers
-                if (line.isEmpty() || line.matches("^\\d+$")) {
+                // Skip events without text segments
+                if (!event.has("segs")) {
                     continue;
                 }
                 
-                // Process timestamp lines
-                if (line.contains("-->")) {
-                    String[] times = line.split("-->");
-                    if (times.length == 2) {
-                        try {
-                            double startTime = parseVttTime(times[0].trim());
-                            double endTime = parseVttTime(times[1].trim());
-                            
-                            // Read the text lines for this segment
-                            StringBuilder textBuilder = new StringBuilder();
-                            String textLine;
-                            while ((textLine = reader.readLine()) != null) {
-                                textLine = textLine.trim();
-                                if (textLine.isEmpty()) break; // End of this segment
-                                
-                                // Clean VTT formatting
-                                String cleanedText = cleanVttFormatting(textLine);
-                                if (!cleanedText.isEmpty()) {
-                                    if (textBuilder.length() > 0) {
-                                        textBuilder.append(" ");
-                                    }
-                                    textBuilder.append(cleanedText);
-                                }
-                            }
-                            
-                            String finalText = textBuilder.toString().trim();
-                            if (!finalText.isEmpty()) {
-                                TranscriptSegment segment = new TranscriptSegment();
-                                segment.setStartTime(startTime);
-                                segment.setEndTime(endTime);
-                                segment.setText(finalText);
-                                segments.add(segment);
-                            }
-                            
-                        } catch (Exception e) {
-                            System.out.println("Error parsing timestamp: " + line + " - " + e.getMessage());
+                // Extract start and end times (in milliseconds)
+                double startTime = event.has("tStartMs") ? 
+                        event.getDouble("tStartMs") / 1000.0 : 0;
+                double endTime = event.has("dDurationMs") ? 
+                        startTime + (event.getDouble("dDurationMs") / 1000.0) : 0;
+                
+                // Extract text from segments
+                StringBuilder textBuilder = new StringBuilder();
+                JSONArray segs = event.getJSONArray("segs");
+                
+                for (int j = 0; j < segs.length(); j++) {
+                    JSONObject seg = segs.getJSONObject(j);
+                    if (seg.has("utf8")) {
+                        String text = seg.getString("utf8");
+                        if (text != null && !text.trim().isEmpty()) {
+                            textBuilder.append(text);
                         }
                     }
+                }
+                
+                String finalText = textBuilder.toString().trim();
+                if (!finalText.isEmpty()) {
+                    TranscriptSegment segment = new TranscriptSegment();
+                    segment.setStartTime(startTime);
+                    segment.setEndTime(endTime);
+                    segment.setText(finalText);
+                    segments.add(segment);
                 }
             }
         }
         
         return segments;
-    }
-    
-    private double parseVttTime(String timeStr) {
-        // Remove any positioning info after the timestamp
-        timeStr = timeStr.split("\\s+")[0];
-        
-        // Parse HH:MM:SS.mmm format
-        String[] parts = timeStr.split("[:\\.]");
-        if (parts.length == 4) {
-            int hours = Integer.parseInt(parts[0]);
-            int minutes = Integer.parseInt(parts[1]);
-            int seconds = Integer.parseInt(parts[2]);
-            int milliseconds = Integer.parseInt(parts[3]);
-            
-            return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0;
-        }
-        throw new IllegalArgumentException("Invalid time format: " + timeStr);
-    }
-    
-    private String cleanVttFormatting(String text) {
-        if (text == null) return "";
-        
-        // Remove VTT timing tags like <00:00:03.199>
-        text = text.replaceAll("<\\d{2}:\\d{2}:\\d{2}\\.\\d{3}>", "");
-        // Remove color/style tags like <c>, </c>, <c.colorname>
-        text = text.replaceAll("</?c[^>]*>", "");
-        // Remove any other HTML-like tags
-        text = text.replaceAll("<[^>]+>", "");
-        // Clean up multiple spaces
-        text = text.replaceAll("\\s+", " ").trim();
-        
-        return text;
     }
     
     private String executeCommand(List<String> command) throws IOException, InterruptedException {
