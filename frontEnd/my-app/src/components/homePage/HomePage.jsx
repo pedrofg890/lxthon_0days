@@ -88,7 +88,7 @@ export default function HomePage() {
             if (err.name === 'AbortError') {
                 setError('Requests cancelled.');
             } else {
-                setError("Could not fetch transcript or summary. Please check the URL.");
+                setError("Error. Please check the URL.");
             }
         } finally {
             setLoading(false);
@@ -239,7 +239,7 @@ export default function HomePage() {
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
                 {success && (
                     <div style={{ color: 'lightgreen', marginTop: '1rem', fontWeight: 'bold' }}>
-                        Transcript and summary generated
+                        Information fetched successfully! You can now navigate to the respective pages to view the results.
                     </div>
                 )}
             </div>
