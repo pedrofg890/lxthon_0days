@@ -1,18 +1,16 @@
 package lxthon.backend.Service;
 
 import org.springframework.stereotype.Service;
-
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-
-import com.azure.ai.inference.ChatCompletionsClient;
+import com.azure.ai.inference.ChatCompletionsAsyncClient;
 import com.azure.ai.inference.ChatCompletionsClientBuilder;
-import com.azure.ai.inference.models.ChatCompletions;
-import com.azure.ai.inference.models.ChatCompletionsOptions;
-import com.azure.ai.inference.models.ChatRequestMessage;
-import com.azure.ai.inference.models.ChatRequestUserMessage;
-import com.azure.ai.inference.models.ChatRequestSystemMessage;
+import com.azure.ai.inference.models.*;
 import com.azure.core.credential.AzureKeyCredential;
+import com.azure.core.http.HttpClient;
+import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
+import reactor.core.publisher.Mono;
 
 @Service
 public class OpenAIService {
@@ -20,23 +18,31 @@ public class OpenAIService {
     private final String key;
     private final String endpoint;
     private final String model;
+    private final ChatCompletionsAsyncClient client;
 
     public OpenAIService() {
-        this.key = System.getProperty("OPENAI_API_KEY"); // You set this using EnvLoader
+        this.key = System.getProperty("OPENAI_API_KEY");
         this.endpoint = "https://models.github.ai/inference";
         this.model = "openai/gpt-4o-mini";
 
         if (this.key == null || this.key.isBlank()) {
             throw new IllegalStateException("OPENAI_API_KEY is missing or blank.");
         }
+
+        HttpClient nettyClient = new NettyAsyncHttpClientBuilder()
+                .readTimeout(Duration.ofMinutes(5))
+                .writeTimeout(Duration.ofMinutes(5))
+                .responseTimeout(Duration.ofMinutes(5))
+                .build();
+
+        this.client = new ChatCompletionsClientBuilder()
+                .credential(new AzureKeyCredential(key))
+                .endpoint(endpoint)
+                .httpClient(nettyClient)
+                .buildAsyncClient();
     }
 
     public String getChatCompletion(String prompt) {
-        ChatCompletionsClient client = new ChatCompletionsClientBuilder()
-                .credential(new AzureKeyCredential(key))
-                .endpoint(endpoint)
-                .buildClient();
-
         List<ChatRequestMessage> chatMessages = Arrays.asList(
                 new ChatRequestUserMessage(prompt)
         );
@@ -44,8 +50,20 @@ public class OpenAIService {
         ChatCompletionsOptions chatCompletionsOptions = new ChatCompletionsOptions(chatMessages);
         chatCompletionsOptions.setModel(model);
 
-        ChatCompletions completions = client.complete(chatCompletionsOptions);
+        try {
+            // Mono blocking here to simulate sync behavior
+            ChatCompletions completions = client.complete(chatCompletionsOptions).block(Duration.ofMinutes(5));
 
-        return completions.getChoice().getMessage().getContent();
+            if (completions == null || completions.getChoice() == null) {
+                return "";
+            }
+
+            String content = completions.getChoice().getMessage().getContent();
+            return content != null ? content : "";
+        } catch (Exception e) {
+            System.err.println("Error calling OpenAI service: " + e.getMessage());
+            e.printStackTrace();
+            return "";
+        }
     }
 }
