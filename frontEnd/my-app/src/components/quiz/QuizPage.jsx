@@ -6,6 +6,15 @@ import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/GeneralButtom.css';
 
+/**
+ * QuizPage component.
+ *
+ * Fetches the most recent quiz via getLastQuiz(), displays each question one at a time,
+ * records user answers, and shows final results.
+ * Includes a Back button to return to HomePage.
+ *
+ * @component
+ */
 export default function QuizPage() {
     const [quiz, setQuiz] = useState(null);
     const [current, setCurrent] = useState(0);
@@ -13,6 +22,9 @@ export default function QuizPage() {
     const [showResult, setShowResult] = useState(false);
     const navigate = useNavigate();
 
+    /**
+     * Load the last generated quiz on mount
+     */
     useEffect(() => {
         setQuiz(getLastQuiz());
     }, []);
@@ -28,6 +40,12 @@ export default function QuizPage() {
         );
     }
 
+    /**
+     * Handle answer selection for the current question.
+     * Advances to the next question or shows results if last.
+     *
+     * @param {number} choiceIdx - Index of the selected choice
+     */
     const handleAnswer = (choiceIdx) => {
         const updated = [...answers];
         updated[current] = choiceIdx;

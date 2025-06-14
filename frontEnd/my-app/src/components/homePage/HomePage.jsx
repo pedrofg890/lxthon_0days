@@ -7,6 +7,17 @@ import '../../styles/HomePage.css'
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 
+/**
+ * HomePage component.
+ *
+ * Allows the user to input a YouTube URL and then:
+ *  - Fetch raw transcript
+ *  - Generate summary
+ *  - Generate quiz
+ *
+ * Manages individual loading states for each operation and allows
+ * cancelling in‐flight requests.
+ */
 export default function HomePage() {
     const [url, setUrl] = useState("");
     const [transcript, setTranscript] = useState(null);
@@ -21,8 +32,16 @@ export default function HomePage() {
     const [abortController, setAbortController] = useState(null);
     const navigate = useNavigate();
 
+    /**
+     * Handle URL input change.
+     * @param {React.ChangeEvent<HTMLInputElement>} e
+     */
     const handleInputChange = (e) => setUrl(e.target.value);
 
+    /**
+     * Kick off transcript, summary and (delayed) quiz fetches in parallel.
+     * Allows cancellation via AbortController.
+     */
     const handleRequest = async () => {
         setLoading(true);
         setError("");
@@ -77,6 +96,9 @@ export default function HomePage() {
         }
     };
 
+    /**
+     * Cancels any in‐flight requests.
+     */
     const handleStop = () => {
         if (abortController) {
             abortController.abort();
