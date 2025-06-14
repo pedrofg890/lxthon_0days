@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Transcript from './pages/Transcript';
 import Insights from './pages/Insights';
-import Quizz from './pages/Quizz';
+import Quiz from './pages/Quiz';
 
 
 function AppRoutes() {
@@ -12,7 +12,7 @@ function AppRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/transcript" element={<Transcript />} />
             <Route path="/insights" element={<Insights />} />
-            <Route path="/test" element={<Quizz />} />
+            <Route path="/quiz" element={<Quiz />} />
         </Routes>
     );
 }
