@@ -1,4 +1,4 @@
-# LXThon AITA Study Assistant 
+# LXThon AITSA Study Assistant 
 
 *An educational assistant tool leveraging YouTube videos to aid in learning and comprehension.*
 
@@ -119,4 +119,4 @@ Ensure backend CORS allows `http://localhost:3000` (configured in `CorsConfig`).
 
 ## License
 
-AITA Study Assistant © 0days
+AITSA - Study Assistant © 0days
