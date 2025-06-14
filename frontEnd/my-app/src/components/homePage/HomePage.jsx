@@ -93,9 +93,10 @@ export default function HomePage() {
     }
 
     return (
-        <section className="home-page-cta-section">
+        <section className="home-page-cta-section" style={{ position: 'relative', minHeight: '100vh' }}>
 
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '4vh', left: 0, right: 0 }}>
+                <img src={process.env.PUBLIC_URL + '/img.png'} alt="Logo" style={{ maxWidth: 180, height: 'auto', display: 'block', margin: '0 auto 2rem auto', borderRadius: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }} />
                 <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: '2rem', fontSize: '3rem' }}>Got a YouTube video? Feed us the link!</h1>
                 <div style={{ width: '100%', maxWidth: '900px', display: 'flex', alignItems: 'center', background: '#1a1a1a', borderRadius: '36px', border: '1px solid #333', padding: '0.75rem 1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', position: 'relative' }}>
                     <input
