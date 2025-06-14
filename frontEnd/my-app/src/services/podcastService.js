@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/videos';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/podcast-api/chat';
 
 let lastQuiz = null;
 
@@ -34,6 +34,17 @@ export async function downloadPodcast(podcastId) {
         throw new Error(txt || 'Erro ao fazer download do podcast');
     }
     // Return the audio as a Blob
+    const blob = await resp.blob();
+    return blob;
+}
+
+export async function streamPodcast(podcastId) {
+    const resp = await fetch(`${API_URL}/stream/${podcastId}`);
+    if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(txt || 'Erro ao fazer stream do podcast');
+    }
+    // Return the audio as a Blob (for streaming)
     const blob = await resp.blob();
     return blob;
 }

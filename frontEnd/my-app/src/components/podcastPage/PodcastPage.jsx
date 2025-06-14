@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { getPodcast, downloadPodcast } from '../../services/podcastService';
+import { getPodcast, downloadPodcast, streamPodcast } from '../../services/podcastService';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/RequestButtom.css';
 
@@ -51,9 +51,19 @@ export default function PodcastPage() {
         }
     };
 
-    const handlePlay = () => {
-        if (audioRef.current) {
-            audioRef.current.play();
+    const handlePlay = async () => {
+        if (!podcastInfo || !podcastInfo.podcastId) return;
+        try {
+            const blob = await streamPodcast(podcastInfo.podcastId);
+            const url = window.URL.createObjectURL(blob);
+            setAudioSrc(url);
+            setTimeout(() => {
+                if (audioRef.current) {
+                    audioRef.current.play();
+                }
+            }, 100); // Ensure audio element updates src before playing
+        } catch (e) {
+            setError("Failed to stream audio.");
         }
     };
 
@@ -111,7 +121,7 @@ export default function PodcastPage() {
                     <button
                         className="belowBarButton"
                         onClick={handlePlay}
-                        disabled={!audioSrc}
+                        disabled={!podcastInfo || !podcastInfo.podcastId}
                         style={{ minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         Play Audio
