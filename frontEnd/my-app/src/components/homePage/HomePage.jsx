@@ -13,6 +13,9 @@ export default function HomePage() {
     const [summary, setSummary] = useState(null);
     const [quiz, setQuiz] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [loadingTranscript, setLoadingTranscript] = useState(false);
+    const [loadingSummary, setLoadingSummary] = useState(false);
+    const [loadingQuiz, setLoadingQuiz] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
     const [abortController, setAbortController] = useState(null);
@@ -27,19 +30,25 @@ export default function HomePage() {
         setSuccess(false);
         setSummary(null);
         setQuiz(null);
+        setLoadingTranscript(true);
+        setLoadingSummary(true);
+        setLoadingQuiz(true);
         const controller = new AbortController();
         setAbortController(controller);
         try {
             const [transcriptData, summaryData, quizData] = await Promise.all([
-                getTranscript(url, controller.signal),
-                getSummary(url, controller.signal),
-                getQuiz(url, 5, controller.signal)
+                (async () => { const res = await getTranscript(url, controller.signal); setLoadingTranscript(false); return res; })(),
+                (async () => { const res = await getSummary(url, controller.signal); setLoadingSummary(false); return res; })(),
+                (async () => { const res = await getQuiz(url, 5, controller.signal); setLoadingQuiz(false); return res; })(),
             ]);
             setTranscript(transcriptData);
             setSummary(summaryData);
             setQuiz(quizData);
             setSuccess(true);
         } catch (err) {
+            setLoadingTranscript(false);
+            setLoadingSummary(false);
+            setLoadingQuiz(false);
             if (err.name === 'AbortError') {
                 setError('Requests cancelled.');
             } else {
@@ -139,14 +148,46 @@ export default function HomePage() {
                 </div>
                 <div style={{ width: '100%', maxWidth: '900px', display: 'flex', gap: '1.5rem', marginTop: '1.5rem', justifyContent: 'center' }}>
                     <button
-                        className="belowBarButton" onClick={() => navigate('/transcript')}>
+                        className="belowBarButton"
+                        onClick={() => navigate('/transcript')}
+                        disabled={loadingTranscript}
+                        style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                         Get Transcript
+                        {loadingTranscript && (
+                            <span className="loading-spinner" style={{
+                                marginLeft: 12,
+                                width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
+                            }} />
+                        )}
                     </button>
-                    <button className="belowBarButton" onClick={() => navigate('/insights')}>
+                    <button
+                        className="belowBarButton"
+                        onClick={() => navigate('/insights')}
+                        disabled={loadingSummary}
+                        style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                         Get Summary
+                        {loadingSummary && (
+                            <span className="loading-spinner" style={{
+                                marginLeft: 12,
+                                width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
+                            }} />
+                        )}
                     </button>
-                    <button className="belowBarButton" onClick={() => navigate('/quiz')}>
+                    <button
+                        className="belowBarButton"
+                        onClick={() => navigate('/quiz')}
+                        disabled={loadingQuiz}
+                        style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                         Generate Quizz
+                        {loadingQuiz && (
+                            <span className="loading-spinner" style={{
+                                marginLeft: 12,
+                                width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
+                            }} />
+                        )}
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
