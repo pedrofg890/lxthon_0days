@@ -14,7 +14,16 @@ import org.springframework.web.bind.annotation.*;
 
 import lxthon.backend.Domain.TranscriptSegment;
 
-
+/**
+ * REST controller exposing endpoints for video processing features:
+ * <ul>
+ *   <li>Retrieve video metadata</li>
+ *   <li>Download video</li>
+ *   <li>Fetch raw and cleaned transcripts</li>
+ *   <li>Generate summaries</li>
+ *   <li>Generate quizzes</li>
+ * </ul>
+ */
 @RestController
 @RequestMapping("/api/videos")
 public class VideoController {
@@ -34,6 +43,15 @@ public class VideoController {
     @NonNull
     private final QuizGeneratorService quizGenerator;
 
+    /**
+     * Constructs the VideoController with all required services.
+     *
+     * @param youtubeService             service for interacting with YouTube videos
+     * @param videoToSpeechService       service for converting video to speech/audio
+     * @param transcriptProcessingService service for cleaning and processing transcripts
+     * @param summaryGenerator           service for generating summaries from transcripts
+     * @param quizGenerator              service for generating quizzes from transcript text
+     */
     public VideoController(VideoService youtubeService, VideoToSpeechService videoToSpeechService, @NonNull TranscriptProcessingService transcriptProcessingService, @NonNull SummaryGeneratorService summaryGenerator,  @NonNull QuizGeneratorService quizGenerator) {
         this.youtubeService = youtubeService;
         this.videoToSpeechService = videoToSpeechService;
@@ -42,11 +60,34 @@ public class VideoController {
         this.quizGenerator = quizGenerator;
     }
 
+    /**
+     * Retrieves metadata about a YouTube video.
+     * <p>
+     * Returns information such as title, duration, and available formats.
+     * </p>
+     *
+     * @param url the URL of the YouTube video
+     * @return a String containing video metadata in JSON or plain text format
+     * @throws IOException          if network or parsing fails
+     * @throws InterruptedException if the request is interrupted
+     */
     @GetMapping("/info")
     public String getVideoInfo(@RequestParam String url) throws IOException, InterruptedException {
         return youtubeService.getVideoInfo(url);
     }
 
+    /**
+     * Downloads a YouTube video in the specified format.
+     * <p>
+     * If no format is provided, defaults to the service’s standard format.
+     * </p>
+     *
+     * @param url    the URL of the YouTube video
+     * @param format optional format identifier (e.g., "mp4", "mp3")
+     * @return a String path or URL to the downloaded file
+     * @throws IOException          if download or saving fails
+     * @throws InterruptedException if the download process is interrupted
+     */
     @GetMapping("/download")
     public String downloadVideo(
             @RequestParam String url,
@@ -54,6 +95,17 @@ public class VideoController {
         return youtubeService.downloadVideo(url, format);
     }
 
+    /**
+     * Fetches the raw transcript segments from a YouTube video.
+     * <p>
+     * Returns a list of {@link TranscriptSegment}, each with start/end times and text.
+     * </p>
+     *
+     * @param url the URL of the YouTube video
+     * @return a ResponseEntity containing the list of segments or an error status
+     * @throws IOException          if fetching fails
+     * @throws InterruptedException if the operation is interrupted
+     */
     @GetMapping("/transcript")
     public ResponseEntity<List<TranscriptSegment>> getTranscript(@RequestParam String url) throws IOException, InterruptedException {
         try {
@@ -66,6 +118,17 @@ public class VideoController {
         }
     }
 
+    /**
+     * Asynchronously cleans and normalizes transcript segments.
+     * <p>
+     * Removes filler words, restores punctuation, and preserves timecodes.
+     * </p>
+     *
+     * @param url the URL of the YouTube video
+     * @return a CompletableFuture yielding a ResponseEntity with cleaned segments
+     * @throws IOException          if processing setup fails
+     * @throws InterruptedException if the operation is interrupted
+     */
     @GetMapping("/clean-transcript")
     public CompletableFuture<ResponseEntity<List<TranscriptSegment>>> cleanTranscript(@RequestParam String url) throws IOException, InterruptedException {
         return transcriptProcessingService.getCleanedTranscript(url)
@@ -76,6 +139,17 @@ public class VideoController {
                 });
     }
 
+    /**
+     * Generates a summary of the video transcript.
+     * <p>
+     * Produces a concise text summary based on the full transcript.
+     * </p>
+     *
+     * @param url the URL of the YouTube video
+     * @return a ResponseEntity containing the summary text or an error status
+     * @throws IOException          if retrieval or summarization fails
+     * @throws InterruptedException if the process is interrupted
+     */
     @GetMapping("/summary")
     public ResponseEntity<String> getSummary(@RequestParam String url) throws IOException, InterruptedException {
         try {
@@ -88,6 +162,17 @@ public class VideoController {
         }
     }
 
+    /**
+     * Generates a multiple-choice quiz from the video transcript.
+     * <p>
+     * First cleans the transcript, then creates a quiz with the specified number
+     * of questions using the {@link QuizGeneratorService}. Returns the quiz as JSON.
+     * </p>
+     *
+     * @param url          the URL of the YouTube video
+     * @param numQuestions the number of quiz questions to generate (default 5)
+     * @return a ResponseEntity with the {@link Quiz} object or an error message
+     */
     @GetMapping("/quiz")
     public ResponseEntity<?> generateQuiz (@RequestParam String url, @RequestParam(defaultValue = "5") int numQuestions) {
         try {
