@@ -55,10 +55,27 @@ public class TranscriptCleanerService {
         }
         
         // Modify prompt for this approach
-        String prompt = "You are a transcript cleaner. Clean the following transcript text by fixing grammar, " +
-                       "removing filler words, and normalizing formatting. DO NOT remove the [SEGx] and [/SEGx] markers " +
-                       "as they're needed to map segments. Preserve paragraph structure and meaning.\n\n" +
-                       fullText.toString();
+        String prompt = "You are a transcript cleaner focused on removing verbal disfluencies.\n\n" +
+               "CRITICALLY IMPORTANT: Your primary task is to REMOVE ALL filler words including but not limited to:\n" +
+               "- 'uh', 'um', 'er', 'ah', 'eh'\n" +
+               "- 'like', 'you know', 'I mean', 'kind of', 'sort of'\n" +
+               "- Repeated words ('the the', 'I I I')\n" +
+               "- False starts and incomplete phrases\n" +
+               "- ANY hesitation sound or unnecessary verbal pause\n\n" +
+               
+               "Example: \"I um actually uh wanted to like you know see if uh we could...\" → \"I actually wanted to see if we could...\"\n\n" +
+               
+               "Additional tasks (secondary to removing fillers):\n" +
+               "1. Fix grammar and punctuation\n" +
+               "2. Normalize numbers and acronyms\n" +
+               "3. Preserve meaningful content\n\n" +
+               
+               "CRITICAL: Keep ALL [SEGx] and [/SEGx] markers EXACTLY as they appear - they are required for processing.\n\n" +
+               
+               "Return ONLY the cleaned transcript with segment markers preserved.\n\n" +
+               
+               "Transcript to clean:\n" + 
+               fullText.toString();
         
         // Get cleaned text
         String cleanedText = openAIService.getChatCompletion(prompt);
