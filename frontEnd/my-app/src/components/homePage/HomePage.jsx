@@ -235,6 +235,13 @@ export default function HomePage() {
                             <span style={{ marginLeft: 12, color: 'lightgreen', fontSize: 22, display: 'inline-block' }}>✔</span>
                         ) : null}
                     </button>
+                    <button
+                        className="belowBarButton"
+                        onClick={() => navigate('/podcast')}
+                        style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        Generate Podcast
+                    </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
                 {success && (
