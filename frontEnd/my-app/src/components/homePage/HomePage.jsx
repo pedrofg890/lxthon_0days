@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTranscript } from '../../services/transcriptService';
+import { getSummary } from '../../services/insightsService';
 import '../../styles/HomePage.css'
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
@@ -8,6 +9,7 @@ import '../../styles/BelowBarButtom.css';
 export default function HomePage() {
     const [url, setUrl] = useState("");
     const [transcript, setTranscript] = useState(null);
+    const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -20,12 +22,18 @@ export default function HomePage() {
         setError("");
         setTranscript(null);
         setSuccess(false);
+        setSummary(null);
         try {
-            const transcriptData = await getTranscript(url);
+            // Send both requests in parallel
+            const [transcriptData, summaryData] = await Promise.all([
+                getTranscript(url),
+                getSummary(url)
+            ]);
             setTranscript(transcriptData);
+            setSummary(summaryData);
             setSuccess(true);
         } catch (err) {
-            setError("Could not fetch transcript. Please check the URL.");
+            setError("Could not fetch transcript or summary. Please check the URL.");
         } finally {
             setLoading(false);
         }
@@ -75,7 +83,9 @@ export default function HomePage() {
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
                 {success && (
-                    <div style={{ color: 'lightgreen', marginTop: '1rem', fontWeight: 'bold' }}>Transcript generated</div>
+                    <div style={{ color: 'lightgreen', marginTop: '1rem', fontWeight: 'bold' }}>
+                        Transcript and summary generated
+                    </div>
                 )}
             </div>
         </section>

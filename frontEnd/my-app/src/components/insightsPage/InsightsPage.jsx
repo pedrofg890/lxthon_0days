@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSummary } from '../../services/insightsService';
+import { getLastSummary } from '../../services/insightsService';
 import '../../styles/HomePage.css';
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/GeneralButtom.css';
 
 export default function InsightsPage() {
+    const [data, setData] = useState([]);
     const navigate = useNavigate();
     const [summary, setSummary] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    React.useEffect(() => {
-        setLoading(true);
-        getSummary()
-            .then(data => setSummary(data))
-            .catch(err => setError("Could not fetch summary."))
-            .finally(() => setLoading(false));
+    useEffect(() => {
+        // getLastTranscript is synchronous, but we want to update if the user navigates back and forth
+        const interval = setInterval(() => {
+            setData(getLastSummary());
+        }, 500);
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -36,7 +37,6 @@ export default function InsightsPage() {
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
                 overflow: 'hidden',
             }}>
-                {/* Right column: Transcript text (now full width) */}
                 <div style={{
                     width: '100%',
                     color: '#fff',
@@ -51,20 +51,8 @@ export default function InsightsPage() {
                     overflowY: 'auto',
                     minHeight: '300px',
                 }}>
-                    <div style={{ width: '100%', overflowWrap: 'break-word', wordBreak: 'break-word' }}>
-                        {loading ? (
-                            <div style={{ color: '#fff', fontSize: '1.5rem' }}>Loading...</div>
-                        ) : error ? (
-                            <div style={{ color: 'red', fontSize: '1.5rem' }}>{error}</div>
-                        ) : summary.length === 0 ? (
-                            <div style={{ color: '#fff', fontSize: '1.5rem' }}>No summary available.</div>
-                        ) : (
-                            <ul style={{ listStyle: 'disc', color: '#fff', paddingLeft: '1.5rem', margin: 0, fontSize: '1.5rem', lineHeight: 2, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                                {summary.map((item, idx) => (
-                                    <li key={idx}>{item}</li>
-                                ))}
-                            </ul>
-                        )}
+                    <div style={{ width: '100%', overflowWrap: 'break-word', wordBreak: 'break-word', color: '#fff', fontSize: '1.5rem' }}>
+                        {data && data.length > 0 ? data : 'No summary available.'}
                     </div>
                 </div>
             </div>
