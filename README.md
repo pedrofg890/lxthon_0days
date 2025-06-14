@@ -1,147 +1,121 @@
-# LXThon AITA Study Assistant
+# LXThon AITA Study Assistant 
 
 *An educational assistant tool leveraging YouTube videos to aid in learning and comprehension.*
 
-This project provides a backend service for processing YouTube videos: extracting transcripts, cleaning and normalizing them, generating summaries, quizzes, and even full podcast scripts/audio. 
-It leverages **yt-dlp** for subtitle extraction and an LLM (via a GitHub AI / OpenAI-compatible endpoint) for AI-powered processing.
+This monorepo includes:
+- **Backend**: Spring Boot service for transcript extraction, cleaning, summaries, quizzes, and podcast generation.
+- **Frontend**: React application to interact with all features via a user-friendly UI.
 
 ---
 
 ## Prerequisites
 
-1. **Java 21** (ensure `java --version` returns `21.x`)
-2. **Maven** (for build management)
-3. **yt-dlp** installed and available on your system `PATH`:
+### Backend
+1. **Java 21** (check with `java --version`).
+2. **Maven** (for building).
+3. **yt-dlp** installed and on your system `PATH`:
    ```bash
-   # On macOS (with Homebrew)
+   # macOS (Homebrew)
    brew install yt-dlp
 
-   # Or via pip
+   # or via pip
    pip install yt-dlp
 
-   # Verify installation
    yt-dlp --version
    ```
-4. A valid **OpenAI/GitHub AI API key** (set in `.env`)
+4. A valid **OpenAI/GitHub AI API key** (set in `.env`).
+
+### Frontend
+1. **Node.js** (v16+).
+2. **npm** or **yarn**.
 
 ---
 
 ## Configuration
 
-Create a `.env` file in the project root with:
+### Environment Variables
 
+#### Backend `.env`
 ```dotenv
-# .env
 OPENAI_API_KEY=your_api_key_here
 ```
+Location: project root.
 
-You can also override other properties via `application.properties`:
-
-```properties
-openai.api-key=${OPENAI_API_KEY}
-openai.endpoint=https://api.openai.com/v1/chat/completions
-openai.model=gpt-4
+#### Frontend `.env``
+```dotenv
+REACT_APP_API_URL=http://localhost:8080/api/videos
 ```
+Location: `frontend/` directory.
 
 ---
 
-## Building and Running (Backend)
+## Build & Run
 
+### Backend
 ```bash
-# Build
+# From project root
 mvn clean package
-
-# Run (Spring Boot)
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
+Server listens on `http://localhost:8080`.
 
-The backend will start on `http://localhost:8080` by default.
+### Frontend
+```bash
+cd frontend
+npm install    # or yarn install\ nnpm start      # or yarn start
+```
+App runs at `http://localhost:3000`.
 
 ---
 
-## REST API Endpoints (Backend)
+## REST API (Backend)
 
-All endpoints are under `/api/videos`:
+Base path: `/api/videos`
 
 | Endpoint                                | Method | Description                                            |
 | --------------------------------------- | ------ | ------------------------------------------------------ |
-| `/info?url={videoUrl}`                  | GET    | Returns raw video metadata JSON                        |
-| `/download?url={videoUrl}&format={fmt}` | GET    | Downloads video in specified format (e.g., mp4, mp3)   |
-| `/transcript?url={videoUrl}`            | GET    | Retrieves raw transcript segments                      |
-| `/clean-transcript?url={videoUrl}`      | GET    | Returns normalized transcript segments asynchronously  |
-| `/summary?url={videoUrl}`               | GET    | Generates a concise summary of the transcript          |
-| `/quiz?url={videoUrl}&numQuestions={n}` | GET    | Generates a multiple-choice quiz (default 5 questions) |
+| `/info?url={videoUrl}`                  | GET    | Fetch raw video metadata                               |
+| `/download?url={videoUrl}&format={fmt}` | GET    | Download video in chosen format                        |
+| `/transcript?url={videoUrl}`            | GET    | Raw transcript segments                                 |
+| `/clean-transcript?url={videoUrl}`      | GET    | Cleaned transcript (normalized)                        |
+| `/summary?url={videoUrl}`               | GET    | AI-generated summary                                   |
+| `/quiz?url={videoUrl}&numQuestions={n}` | GET    | Generate a multiple-choice quiz                        |
 
-### Podcast Generation (under `/podcast-api/chat`)
-
-| Endpoint                                                       | Method | Description                                           |
-| -------------------------------------------------------------- | ------ | ----------------------------------------------------- |
-| `/test-openai`                                                 | GET    | Simple test call to AI API                            |
-| `/completion`                                                  | POST   | Forwards prompt body to AI API and returns completion |
-| `/generate-podcast?url={videoUrl}&hostA={nameA}&hostB={nameB}` | POST   | Generates podcast script and audio size info          |
-
----
-
-## Frontend
-
-This repository also includes a React-based frontend for interacting with the backend API.
-
-### Prerequisites
-
-1. **Node.js** (v16+ recommended)
-2. **npm** or **yarn**
-
-### Setup & Run (Frontend)
-
-```bash
-# Navigate to the frontend directory\ ncd frontend
-
-# Install dependencies
-npm install
-# or
-# yarn install
-
-# Start the dev server
-npm start
-# or
-# yarn start
-```
-
-The frontend will run on `http://localhost:3000` by default and communicate with the backend on port `8080`.
-
-### Features
-
-- **Home Page**: Input YouTube URL and choose actions: Transcript, Summary, Quiz
-- **Transcript View**: Displays raw transcript segments
-- **Summary View**: Shows AI-generated summary
-- **Quiz View**: Presents an interactive multiple-choice quiz
-
-Ensure CORS is configured (`CorsConfig`) to allow requests from `http://localhost:3000`.
+#### Podcast `/podcast-api/chat`
+| Endpoint                                         | Method | Description                                    |
+| ------------------------------------------------ | ------ | ---------------------------------------------- |
+| `/test-openai`                                   | GET    | Simple AI API connectivity test                |
+| `/completion`                                    | POST   | Forward arbitrary prompt to AI                 |
+| `/generate-podcast?url=&hostA=&hostB=`           | POST   | Full podcast script (and audio size info)      |
 
 ---
 
-## CORS Configuration (Backend)
+## Frontend Features
 
-The backend allows cross-origin requests from `http://localhost:3000`. To modify, update `CorsConfig`.
+- **Home Page**: Enter YouTube link and trigger transcript, summary, quiz concurrently.
+- **Transcript View**: Paginated, cleaned transcript with timecodes.
+- **Summary View**: Concise AI-generated summary.
+- **Quiz View**: Interactive multiple-choice quiz UI.
+
+Ensure backend CORS allows `http://localhost:3000` (configured in `CorsConfig`).
 
 ---
 
-## Project Structure
+## Contributing
 
-- **Backend**
-    - `lxthon.backend.Service` – business logic
-    - `lxthon.backend.Domain` – data classes
-    - `lxthon.backend.Controller` – REST controllers
-    - `lxthon.backend.config` – configuration (EnvLoader, OpenAIConfig, CORS)
-    - `lxthon.backend.Main` – application entry point
-- **Frontend**
-    - `src/` – React components, service layer to call API
-    - `public/` – static assets
-    - `package.json` – dependencies & scripts
+1. Fork the repo and create a feature branch.
+2. Write tests for new functionality.
+3. Submit a pull request with clear description.
+
+---
+
+## Future Improvements
+- Support multiple languages for transcripts and quizzes.
+- Add user authentication and saved sessions.
+- UI enhancements: progress bars, feedback.
 
 ---
 
 ## License
 
 AITA Study Assistant © 0days
-
