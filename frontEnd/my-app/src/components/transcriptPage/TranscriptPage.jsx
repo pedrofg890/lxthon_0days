@@ -6,11 +6,24 @@ import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/GeneralButtom.css';
 
+/**
+ * TranscriptPage component.
+ *
+ * Continuously polls the latest transcript segments from local storage (via getLastTranscript),
+ * and displays them in a responsive grid with start time, end time, and normalized text.
+ * Includes a "Back to Home" button.
+ *
+ * @component
+ */
 export default function TranscriptPage() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
+    /**
+     * Poll getLastTranscript() every 500ms to update displayed segments
+     * Cleans up the interval on unmount
+     */
     useEffect(() => {
         setLoading(true);
         // getLastTranscript is synchronous, but we want to update if the user navigates back and forth
