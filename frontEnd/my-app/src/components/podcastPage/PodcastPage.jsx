@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { getPodcast } from '../../services/podcastService';
+import { getPodcast, downloadPodcast } from '../../services/podcastService';
 import '../../styles/BelowBarButtom.css';
 import '../../styles/RequestButtom.css';
 
@@ -9,26 +9,44 @@ export default function PodcastPage() {
     const [downloading, setDownloading] = useState(false);
     const [loadingPodcast, setLoadingPodcast] = useState(false);
     const [error, setError] = useState("");
+    const [podcastInfo, setPodcastInfo] = useState(null);
     const audioRef = useRef(null);
 
-    // Dummy download handler (replace with real backend call)
+    // Podcast request handler
+    const handleRequestPodcast = async () => {
+        setError("");
+        setLoadingPodcast(true);
+        try {
+            // Use getPodcast with only the url
+            const response = await getPodcast(url);
+            setPodcastInfo(response);
+            setAudioSrc(response.streamUrl ? response.streamUrl : "");
+        } catch (e) {
+            setError("Failed to generate podcast audio.");
+        } finally {
+            setLoadingPodcast(false);
+        }
+    };
+
+    // Download handler using podcastId
     const handleDownload = async () => {
         setError("");
         setDownloading(true);
         try {
-            // Simulate fetching audio from the URL
-            // Replace this with your backend call to get the audio file
-            // For demo, just set a sample audio file
-            // Example: const response = await fetch(`/api/audio?url=${encodeURIComponent(url)}`);
-            // const blob = await response.blob();
-            // const audioUrl = URL.createObjectURL(blob);
-            // setAudioSrc(audioUrl);
-            setTimeout(() => {
-                setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-                setDownloading(false);
-            }, 1500);
+            if (!podcastInfo || !podcastInfo.podcastId) throw new Error("No podcast generated yet.");
+            // Use downloadPodcast with podcastId
+            const blob = await downloadPodcast(podcastInfo.podcastId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'podcast.mp3';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
         } catch (e) {
             setError("Failed to download audio.");
+        } finally {
             setDownloading(false);
         }
     };
@@ -36,21 +54,6 @@ export default function PodcastPage() {
     const handlePlay = () => {
         if (audioRef.current) {
             audioRef.current.play();
-        }
-    };
-
-    // Podcast request handler
-    const handleRequestPodcast = async () => {
-        setError("");
-        setLoadingPodcast(true);
-        try {
-            // You should implement getPodcast in podcastService.js
-            const audioUrl = await getPodcast(url);
-            setAudioSrc(audioUrl);
-        } catch (e) {
-            setError("Failed to generate podcast audio.");
-        } finally {
-            setLoadingPodcast(false);
         }
     };
 
@@ -100,7 +103,7 @@ export default function PodcastPage() {
                     <button
                         className="belowBarButton"
                         onClick={handleDownload}
-                        disabled={!audioSrc || downloading}
+                        disabled={!podcastInfo || !podcastInfo.podcastId || downloading}
                         style={{ minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         {downloading ? 'Downloading...' : 'Download Audio'}
