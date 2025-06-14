@@ -1,10 +1,10 @@
 import React from 'react';
-import QuizPage2 from '../components/quiz/QuizPage2';
+import QuizPage from '../components/quiz/QuizPage';
 
 function Quiz() {
     return (
         <>
-            <QuizPage2 />
+            <QuizPage />
         </>
     );
 }

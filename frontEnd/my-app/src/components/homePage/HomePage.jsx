@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTranscript } from '../../services/transcriptService';
 import { getSummary } from '../../services/insightsService';
+import { getQuiz } from '../../services/quizService';
 import '../../styles/HomePage.css'
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
@@ -10,6 +11,7 @@ export default function HomePage() {
     const [url, setUrl] = useState("");
     const [transcript, setTranscript] = useState(null);
     const [summary, setSummary] = useState(null);
+    const [quiz, setQuiz] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -23,14 +25,17 @@ export default function HomePage() {
         setTranscript(null);
         setSuccess(false);
         setSummary(null);
+        setQuiz(null);
         try {
             // Send both requests in parallel
-            const [transcriptData, summaryData] = await Promise.all([
+            const [transcriptData, summaryData, quizData] = await Promise.all([
                 getTranscript(url),
-                getSummary(url)
+                getSummary(url),
+                getQuiz(url)
             ]);
             setTranscript(transcriptData);
             setSummary(summaryData);
+            setQuiz(quizData);
             setSuccess(true);
         } catch (err) {
             setError("Could not fetch transcript or summary. Please check the URL.");
@@ -77,7 +82,7 @@ export default function HomePage() {
                     <button className="belowBarButton" onClick={() => navigate('/insights')}>
                         Get Summary
                     </button>
-                    <button className="belowBarButton" onClick={() => navigate('/quizz')}>
+                    <button className="belowBarButton" onClick={() => navigate('/quiz')}>
                         Generate Quizz
                     </button>
                 </div>
