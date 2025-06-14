@@ -37,68 +37,102 @@ This monorepo includes:
 
 #### Backend `.env`
 From GitHub MarketPlace, select an AI Model.
+
 ```dotenv
 OPENAI_API_KEY=your_api_key_here
 ```
 Location: project root.
 
-#### Frontend `.env``
-```dotenv
-REACT_APP_API_URL=http://localhost:8080/api/videos
-```
-Location: `frontend/` directory.
+From elevenLabs
 
+```dotenv
+ELEVEN_LABS_API_KEY=your_api_key_here
+```
 ---
 
 ## Build & Run
 
-### Backend
-```bash
-# From project root
-mvn clean package
-java -jar target/backend-0.0.1-SNAPSHOT.jar
-```
-Server listens on `http://localhost:8080`.
+## Backend
 
-### Frontend
-```bash
-cd frontend
-npm install    # or yarn install\ nnpm start      # or yarn start
-```
-App runs at `http://localhost:3000`.
+### Setup & Run
 
+1. Clone the repo and `cd backend`
+2. Create a `.env` file (see above)
+3. Build and run:
+   ```bash
+   mvn clean package
+   mvn spring-boot:run
+   ```
+4. The server will start on `http://localhost:8080`.
 ---
 
 ## REST API (Backend)
 
 Base path: `/api/videos`
 
-| Endpoint                                | Method | Description                                            |
-| --------------------------------------- | ------ | ------------------------------------------------------ |
-| `/info?url={videoUrl}`                  | GET    | Fetch raw video metadata                               |
-| `/download?url={videoUrl}&format={fmt}` | GET    | Download video in chosen format                        |
-| `/transcript?url={videoUrl}`            | GET    | Raw transcript segments                                 |
-| `/clean-transcript?url={videoUrl}`      | GET    | Cleaned transcript (normalized)                        |
-| `/summary?url={videoUrl}`               | GET    | AI-generated summary                                   |
-| `/quiz?url={videoUrl}&numQuestions={n}` | GET    | Generate a multiple-choice quiz                        |
+#### Video / Transcript / Quiz
 
-#### Podcast `/podcast-api/chat`
-| Endpoint                                         | Method | Description                                    |
-| ------------------------------------------------ | ------ | ---------------------------------------------- |
-| `/test-openai`                                   | GET    | Simple AI API connectivity test                |
-| `/completion`                                    | POST   | Forward arbitrary prompt to AI                 |
-| `/generate-podcast?url=&hostA=&hostB=`           | POST   | Full podcast script (and audio size info)      |
+| Method | Path                           | Query / Body                     | Description                                           |
+| ------ | ------------------------------ | -------------------------------- | ----------------------------------------------------- |
+| GET    | `/api/videos/info`             | `?url={videoUrl}`                | Returns raw YouTube video metadata (JSON).            |
+| GET    | `/api/videos/transcript`       | `?url={videoUrl}`                | Returns raw transcript segments.                      |
+| GET    | `/api/videos/clean-transcript` | `?url={videoUrl}`                | Returns cleaned & normalized transcript segments.     |
+| GET    | `/api/videos/summary`          | `?url={videoUrl}`                | Returns a concise summary of the transcript.          |
+| GET    | `/api/videos/quiz`             | `?url={videoUrl}&numQuestions=5` | Returns a multiple-choice quiz (default 5 questions). |
+
+
+#### Podcast
+
+Base path: `/podcast-api/chat`
+
+| Method | Path                    | Params / Body     | Description                                                                                                                                           |
+| ------ | ----------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/completion`           | Raw text body     | Forwards a prompt directly to OpenAI; returns raw completion.                                                                                         |
+| GET    | `/test-openai`          | —                 | Sends test prompt `"Say 'Hello World'..."` to verify OpenAI connectivity.                                                                             |
+| POST   | `/test-save-audio`      | `?text={anyText}` | Uses TTS to generate a small MP3 file and saves it locally (for ElevenLabs / Azure TTS tests).                                                        |
+| POST   | `/generate-podcast`     | `?url={videoUrl}` | Generates podcast script & audio from a YouTube URL. Returns JSON with:• `podcastId`• `script`• `hosts`• `audioSizeBytes`• `downloadUrl`• `streamUrl` |
+| GET    | `/download/{podcastId}` | Path param        | Streams the generated MP3 as an attachment download.                                                                                                  |
+| GET    | `/stream/{podcastId}`   | Path param        | Streams the generated MP3 inline for playback.                                                                                                        |
+| POST   | `/clear-cache`          | —                 | Clears the in-memory podcast cache (useful for testing).                                                                                              |
+
+---
+## Frontend
+
+### Setup & Run
+
+1. `cd frontend`
+2. Copy `.env.example` to `.env` and set:
+   ```env
+   REACT_APP_API_URL=http://localhost:8080
+   ```
+3. Install and start:
+   ```bash
+   npm install
+   npm start
+   ```
+4. Open `http://localhost:3000` in your browser.
 
 ---
 
-## Frontend Features
+### User Flow
 
-- **Home Page**: Enter YouTube link and trigger transcript, summary, quiz concurrently.
-- **Transcript View**: Paginated, cleaned transcript with timecodes.
-- **Summary View**: Concise AI-generated summary.
-- **Quiz View**: Interactive multiple-choice quiz UI.
+- **Home**: Paste a YouTube URL, then click
 
-Ensure backend CORS allows `http://localhost:3000` (configured in `CorsConfig`).
+   - **Get Transcript** → view cleaned transcript
+   - **Get Summary** → view AI-generated summary
+   - **Generate Quiz** → answer a 5-question quiz
+   - **Generate Podcast** → convert video into podcast audio
+
+- **Transcript Page** (`/transcript`): Displays time-coded transcript.
+
+- **Insights Page** (`/insights`): Shows AI-generated summary.
+
+- **Quiz Page** (`/quiz`): Interactive multiple-choice quiz, shows score.
+
+- **Podcast Page** (`/podcast`):
+
+   - Enter URL → generate podcast
+   - Download or play audio in-browser
 
 ---
 
@@ -110,6 +144,32 @@ Ensure backend CORS allows `http://localhost:3000` (configured in `CorsConfig`).
 
 ---
 
+## Project Structure
+
+```
+backend/
+  ├─ src/main/java/…
+  │   ├─ config/          (.env loader, CORS, OpenAIConfig)
+  │   ├─ Controller/      (VideoController, PodcastController)
+  │   ├─ Domain/          (TranscriptSegment, Quiz, QuizQuestion)
+  │   ├─ Service/         (VideoService, TranscriptCleanerService, SummaryGeneratorService, QuizGeneratorService, PodcastService, OpenAIService, etc.)
+  │   └─ Main.java        (SpringBootApplication, async enabled)
+  └─ .env                 (your API key)
+frontend/
+  ├─ src/components/     (HomePage, TranscriptPage, InsightsPage, QuizPage, PodcastPage)
+  ├─ src/services/       (transcriptService.js, insightsService.js, quizService.js, podcastService.js)
+  └─ src/routes/         (React Router setup)
+  
+```
+---
+
+## Notes
+
+- All AI calls use **temperature=0** for deterministic outputs.
+- The quiz generator & summarizer use prompt engineering to keep outputs JSON-parsable.
+- Make sure `yt-dlp` is on your PATH so subtitle extraction works.
+- This tool is designed to **aid studying**: extract knowledge from videos, test yourself, and even listen on the go as a podcast.
+
 ## Future Improvements
 - Support multiple languages for transcripts and quizzes.
 - Add user authentication and saved sessions.
@@ -120,3 +180,5 @@ Ensure backend CORS allows `http://localhost:3000` (configured in `CorsConfig`).
 ## License
 
 AITSA - Study Assistant © 0days
+
+Enjoy learning! 🚀
