@@ -36,6 +36,7 @@ This monorepo includes:
 ### Environment Variables
 
 #### Backend `.env`
+From GitHub MarketPlace, select an AI Model.
 ```dotenv
 OPENAI_API_KEY=your_api_key_here
 ```
