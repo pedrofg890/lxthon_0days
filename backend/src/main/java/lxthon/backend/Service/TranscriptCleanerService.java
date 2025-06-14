@@ -45,23 +45,51 @@ public class TranscriptCleanerService {
      * @return lista de TranscriptSegment com normalizedText preenchido
      */
     public List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
-        List<TranscriptSegment> result = new ArrayList<>();
+        // Extract all raw text with segment markers
+        StringBuilder fullText = new StringBuilder();
+        for (int i = 0; i < segments.size(); i++) {
+            TranscriptSegment segment = segments.get(i);
+            fullText.append("[SEG").append(i).append("]")
+                    .append(segment.getText())
+                    .append("[/SEG").append(i).append("] ");
+        }
         
-        // Split segments into chunks
-        for (int i = 0; i < segments.size(); i += MAX_SEGMENTS_PER_CHUNK) {
-            int endIndex = Math.min(i + MAX_SEGMENTS_PER_CHUNK, segments.size());
-            List<TranscriptSegment> chunk = segments.subList(i, endIndex);
+        // Modify prompt for this approach
+        String prompt = "You are a transcript cleaner. Clean the following transcript text by fixing grammar, " +
+                       "removing filler words, and normalizing formatting. DO NOT remove the [SEGx] and [/SEGx] markers " +
+                       "as they're needed to map segments. Preserve paragraph structure and meaning.\n\n" +
+                       fullText.toString();
+        
+        // Get cleaned text
+        String cleanedText = openAIService.getChatCompletion(prompt);
+        
+        // Process the result
+        List<TranscriptSegment> result = new ArrayList<>();
+        for (int i = 0; i < segments.size(); i++) {
+            String marker = "\\[SEG" + i + "\\](.*?)\\[/SEG" + i + "\\]";
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(marker, java.util.regex.Pattern.DOTALL);
+            java.util.regex.Matcher matcher = pattern.matcher(cleanedText);
             
-            // Process this chunk
-            List<TranscriptSegment> cleanedChunk = processChunk(chunk);
-            result.addAll(cleanedChunk);
-            
-            // Add a small delay between chunks to avoid rate limiting
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IOException("Processing interrupted", e);
+            if (matcher.find()) {
+                String cleaned = matcher.group(1).trim();
+                TranscriptSegment original = segments.get(i);
+                
+                TranscriptSegment newSegment = new TranscriptSegment();
+                newSegment.setStartTime(original.getStartTime());
+                newSegment.setEndTime(original.getEndTime());
+                newSegment.setText(original.getText());
+                newSegment.setNormalizedText(cleaned);
+                
+                result.add(newSegment);
+            } else {
+                // Fallback if segment not found - keep original
+                TranscriptSegment original = segments.get(i);
+                TranscriptSegment newSegment = new TranscriptSegment();
+                newSegment.setStartTime(original.getStartTime());
+                newSegment.setEndTime(original.getEndTime());
+                newSegment.setText(original.getText());
+                newSegment.setNormalizedText(original.getText());
+                result.add(newSegment);
             }
         }
         
