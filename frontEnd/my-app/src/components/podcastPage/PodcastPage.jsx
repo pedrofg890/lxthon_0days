@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { getPodcast } from '../../services/podcastService';
 import '../../styles/BelowBarButtom.css';
+import '../../styles/RequestButtom.css';
 
 export default function PodcastPage() {
     const [url, setUrl] = useState("");
     const [audioSrc, setAudioSrc] = useState("");
     const [downloading, setDownloading] = useState(false);
+    const [loadingPodcast, setLoadingPodcast] = useState(false);
     const [error, setError] = useState("");
     const audioRef = useRef(null);
 
@@ -36,23 +39,68 @@ export default function PodcastPage() {
         }
     };
 
+    // Podcast request handler
+    const handleRequestPodcast = async () => {
+        setError("");
+        setLoadingPodcast(true);
+        try {
+            // You should implement getPodcast in podcastService.js
+            const audioUrl = await getPodcast(url);
+            setAudioSrc(audioUrl);
+        } catch (e) {
+            setError("Failed to generate podcast audio.");
+        } finally {
+            setLoadingPodcast(false);
+        }
+    };
+
     return (
         <section style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '3rem' }}>
             <div style={{ width: '100%', maxWidth: 500, background: '#232323', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.15)', padding: '2rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <button onClick={() => window.location.href = '/'} className="generalButton" style={{ marginBottom: '1.5rem', alignSelf: 'flex-start' }}>Back to Home</button>
                 <h1 style={{ color: '#fff', fontSize: '2rem', marginBottom: '1.5rem' }}>Podcast Audio Tool</h1>
-                <input
-                    type="text"
-                    placeholder="Paste a link here..."
-                    value={url}
-                    onChange={e => setUrl(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', fontSize: '1.1rem', borderRadius: 8, border: '1px solid #444', marginBottom: '1.5rem', background: '#181818', color: '#fff' }}
-                />
+                <div style={{ width: '100%', display: 'flex', alignItems: 'center', background: '#1a1a1a', borderRadius: '36px', border: '1px solid #333', padding: '0.75rem 1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', position: 'relative', marginBottom: '1.5rem' }}>
+                    <input
+                        type="text"
+                        placeholder="Paste a link here..."
+                        value={url}
+                        onChange={e => setUrl(e.target.value)}
+                        style={{
+                            background: 'transparent',
+                            color: '#fff',
+                            border: 'none',
+                            outline: 'none',
+                            fontSize: '1.5rem', // Increased font size
+                            flex: 1,
+                            padding: '1.5rem 0', // Increased vertical padding
+                        }}
+                    />
+                    <button
+                        className="requestButton"
+                        onClick={handleRequestPodcast}
+                        disabled={!url.trim() || loadingPodcast}
+                        style={{ position: 'relative', width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        {loadingPodcast ? (
+                            <span className="loading-spinner" style={{
+                                width: 28,
+                                height: 28,
+                                border: '4px solid #fff',
+                                borderTop: '4px solid #888',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite',
+                                display: 'inline-block',
+                            }} />
+                        ) : (
+                            <span role="img" aria-label="Send">▶</span>
+                        )}
+                    </button>
+                </div>
                 <div style={{ display: 'flex', gap: '1rem', width: '100%', justifyContent: 'center', marginBottom: '1.5rem' }}>
                     <button
                         className="belowBarButton"
                         onClick={handleDownload}
-                        disabled={!url.trim() || downloading}
+                        disabled={!audioSrc || downloading}
                         style={{ minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         {downloading ? 'Downloading...' : 'Download Audio'}

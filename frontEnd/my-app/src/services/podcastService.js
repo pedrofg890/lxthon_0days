@@ -4,7 +4,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/vide
 let lastQuiz = null;
 
 
-export async function getQuiz(videoUrl, numQuestions = 5, signal) {
+export async function getPodcast(videoUrl, numQuestions = 5, signal) {
     const resp = await fetch(
         `${API_URL}/quiz?url=${encodeURIComponent(videoUrl)}&numQuestions=${numQuestions}`,
         signal ? { signal } : undefined
