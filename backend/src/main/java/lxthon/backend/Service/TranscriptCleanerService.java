@@ -9,7 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TranscriptCleanerService: limpa e normaliza segmentos de transcrição via OpenAIService.
+ * Service that cleans and normalizes raw transcript segments by delegating to an LLM.
+ * <p>
+ * Uses a context‐aware prompt to remove filler words, restore punctuation,
+ * normalize terms, and preserve the original timecodes. Supports both
+ * single‐chunk and multi‐chunk processing for large transcripts.
+ * </p>
  */
 @Service
 public class TranscriptCleanerService {
@@ -17,6 +22,13 @@ public class TranscriptCleanerService {
     @NonNull
     private final OpenAIService openAIService;
 
+    /**
+     * The system prompt instructing the model how to clean each segment.
+     * <p>
+     * Specifies removal of disfluencies, restoration of punctuation,
+     * normalization of numbers/terms, and preservation of timecodes.
+     * </p>
+     */
     @NonNull
     private static final String SYSTEM_PROMPT =
             "You are a deterministic, context-aware transcript cleaner. " +
@@ -34,15 +46,26 @@ public class TranscriptCleanerService {
     // Maximum number of segments to process in one API call
     private static final int MAX_SEGMENTS_PER_CHUNK = 50;
 
-    //Constructor
+    /**
+     * Constructs a new TranscriptCleanerService.
+     *
+     * @param openAIService the service used to send prompts to the LLM
+     */
     public TranscriptCleanerService(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
 
     /**
-     * Processa e normaliza a lista de segmentos.
-     * @param segments lista de TranscriptSegment com texto bruto
-     * @return lista de TranscriptSegment com normalizedText preenchido
+     * Cleans and normalizes the given list of transcript segments.
+     * <p>
+     * If the number of segments exceeds {@link #MAX_SEGMENTS_PER_CHUNK}, it
+     * can be adapted to split into chunks and reassemble, but here it sends
+     * the entire list at once.
+     * </p>
+     *
+     * @param segments the raw transcript segments to clean
+     * @return a list of TranscriptSegment with {@code normalizedText} populated
+     * @throws IOException if parsing the LLM response fails
      */
     public List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
         // Extract all raw text with segment markers
@@ -114,9 +137,12 @@ public class TranscriptCleanerService {
     }
 
     /**
-     * Process a single chunk of transcript segments.
-     * @param chunk List of segments to process
-     * @return List of cleaned segments
+     * Processes a chunk of segments by sending JSON‐serialized segments to the LLM
+     * and parsing back the cleaned JSON array.
+     *
+     * @param chunk the sublist of segments to process
+     * @return the cleaned sublist of TranscriptSegment objects
+     * @throws IOException if JSON parsing of the LLM response fails
      */
     private List<TranscriptSegment> processChunk(List<TranscriptSegment> chunk) throws IOException {
         // Serialize the chunk to JSON
@@ -149,9 +175,14 @@ public class TranscriptCleanerService {
     }
 
     /**
-     * Extracts a JSON array from the AI response, handling various response formats.
-     * @param response The raw response from the AI
-     * @return The extracted JSON array as a string
+     * Extracts the first JSON array substring from the LLM response.
+     * <p>
+     * Strips markdown fences and locates the array boundaries '[' ... ']'.
+     * </p>
+     *
+     * @param response the raw text response from the LLM
+     * @return a valid JSON array string
+     * @throws IllegalArgumentException if no valid JSON array is found
      */
     private String extractJsonArray(String response) {
         // Remove any markdown code block markers

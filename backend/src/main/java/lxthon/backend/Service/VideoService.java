@@ -18,17 +18,41 @@ import org.springframework.stereotype.Service;
 
 import lxthon.backend.Domain.TranscriptSegment;
 
+/**
+ * Service for interacting with YouTube videos via yt-dlp:
+ * <ul>
+ *   <li>Download videos in a specified format.</li>
+ *   <li>Fetch metadata (JSON dump) for a video.</li>
+ *   <li>Extract auto-generated English subtitles and parse them into {@link TranscriptSegment} objects.</li>
+ * </ul>
+ */
 @Service
 public class VideoService {
     
     private final String ytDlpPath;
-    
+
+    /**
+     * Constructs a VideoService using a default yt-dlp executable path.
+     * <p>
+     * You can override this path by modifying the constructor or
+     * loading from configuration in application.properties.
+     * </p>
+     */
     public VideoService() {
         // You can configure this in application.properties
         this.ytDlpPath = "yt-dlp"; // If yt-dlp is in PATH
         // Or use absolute path like: "C:\\path\\to\\yt-dlp.exe" for Windows
     }
-    
+
+    /**
+     * Downloads the specified YouTube video in the given format.
+     *
+     * @param url    the YouTube video URL
+     * @param format the format code (e.g., "mp4", "best"); if null, defaults to "best"
+     * @return the yt-dlp console output, typically containing file location details
+     * @throws IOException          if an I/O error occurs during execution
+     * @throws InterruptedException if the download process is interrupted
+     */
     public String downloadVideo(String url, String format) throws IOException, InterruptedException {
         List<String> command = new ArrayList<>();
         command.add(ytDlpPath);
@@ -38,7 +62,15 @@ public class VideoService {
         
         return executeCommand(command);
     }
-    
+
+    /**
+     * Retrieves metadata for the specified YouTube video as a JSON string.
+     *
+     * @param url the YouTube video URL
+     * @return a JSON dump of video metadata (title, duration, formats, etc.)
+     * @throws IOException          if an I/O error occurs during execution
+     * @throws InterruptedException if the metadata fetch is interrupted
+     */
     public String getVideoInfo(String url) throws IOException, InterruptedException {
         List<String> command = new ArrayList<>();
         command.add(ytDlpPath);
@@ -47,7 +79,16 @@ public class VideoService {
         
         return executeCommand(command);
     }
-    
+
+    /**
+     * Extracts auto-generated English subtitles from the video and converts
+     * them into a list of {@link TranscriptSegment}.
+     *
+     * @param url the YouTube video URL
+     * @return a list of TranscriptSegment objects with start/end times and text
+     * @throws IOException          if reading or parsing subtitle files fails
+     * @throws InterruptedException if the subtitle extraction process is interrupted
+     */
     public List<TranscriptSegment> getTranscript(String url) throws IOException, InterruptedException {
         // Ensure URL has proper protocol
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -126,7 +167,14 @@ public class VideoService {
             }
         }
     }
-    
+
+    /**
+     * Parses a yt-dlp-generated subtitle JSON file into TranscriptSegment objects.
+     *
+     * @param jsonFile the subtitle JSON file
+     * @return a list of TranscriptSegment with startTime, endTime, and text
+     * @throws IOException if file reading or JSON parsing fails
+     */
     private List<TranscriptSegment> parseJsonSubtitleFile(File jsonFile) throws IOException {
         List<TranscriptSegment> segments = new ArrayList<>();
         
@@ -175,7 +223,15 @@ public class VideoService {
         
         return segments;
     }
-    
+
+    /**
+     * Executes the given command line, capturing both standard and error output.
+     *
+     * @param command the list of command and arguments to run
+     * @return the combined console output
+     * @throws IOException          if an I/O error occurs
+     * @throws InterruptedException if the process is interrupted
+     */
     private String executeCommand(List<String> command) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
