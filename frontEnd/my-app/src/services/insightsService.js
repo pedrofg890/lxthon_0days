@@ -2,8 +2,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/vide
 
 let dataReceived;
 
-export async function getSummary(url) {
-    const response = await fetch(`${API_URL}/summary?url=${encodeURIComponent(url)}`);
+export async function getSummary(url, signal) {
+    const response = await fetch(`${API_URL}/summary?url=${encodeURIComponent(url)}`, { signal });
     const data = await response.text(); // get as string
     if (!response.ok) {
         throw new Error('Failed to fetch insights');
