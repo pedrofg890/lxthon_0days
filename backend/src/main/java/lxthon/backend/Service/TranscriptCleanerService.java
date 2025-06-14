@@ -32,7 +32,7 @@ public class TranscriptCleanerService {
     private final ObjectMapper mapper = new ObjectMapper();
 
     // Maximum number of segments to process in one API call
-    private static final int MAX_SEGMENTS_PER_CHUNK = 100;
+    private static final int MAX_SEGMENTS_PER_CHUNK = 70;
 
     //Constructor
     public TranscriptCleanerService(OpenAIService openAIService) {
