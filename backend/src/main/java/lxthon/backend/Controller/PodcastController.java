@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * REST controller for handling podcast-related operations.
@@ -40,6 +42,8 @@ public class PodcastController {
 
     @NonNull
     private final VideoService videoService;
+
+    private final Map<String, PodcastService.PodcastResult> podcastCache = new ConcurrentHashMap<>();
 
     /**
      * Constructs a new {@code PodcastController} with the required services.
@@ -142,37 +146,86 @@ public class PodcastController {
      *         </ul>
      *         or an error map with success=false and an error message on failure.
      */
+
     @PostMapping("/generate-podcast")
-    public ResponseEntity<byte[]> generatePodcast(@RequestParam String url) {
+    public ResponseEntity<Map<String, Object>> generatePodcast(@RequestParam String url) {
         try {
             log.info("Received podcast generation request for URL: {}", url);
 
-            // HOSTS FIXOS - sempre os mesmos
+            // Gerar o podcast
             PodcastService.PodcastResult result = podcastService.generatePodcastFromVideo(url, "Ana", "João");
 
-            // Log informações para debug
-            log.info("Podcast generated successfully. Script: {} chars, Audio: {} bytes",
-                    result.getScript().length(), result.getAudioSizeBytes());
+            // Criar ID único e guardar no cache
+            String podcastId = UUID.randomUUID().toString();
+            podcastCache.put(podcastId, result);
 
-            // Criar nome do ficheiro
-            String filename = String.format("podcast_ana_joao_%d.mp3", System.currentTimeMillis());
+            log.info("Podcast generated successfully. ID: {}, Script: {} chars, Audio: {} bytes",
+                    podcastId, result.getScript().length(), result.getAudioSizeBytes());
 
-            // Retornar o áudio para download
-            return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
-                    .header("Content-Type", "audio/mpeg")
-                    .header("X-Podcast-Hosts", "Ana & João")
-                    .header("X-Video-URL", url)
-                    .body(result.getAudio());
+            // Criar resposta com todas as opções
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("podcastId", podcastId);
+            response.put("videoUrl", url);
+            response.put("script", result.getScript());
+            response.put("hosts", "Ana & João");
+            response.put("audioSizeBytes", result.getAudioSizeBytes());
+            response.put("downloadUrl", "/podcast-api/chat/download/" + podcastId);
+            response.put("streamUrl", "/podcast-api/chat/stream/" + podcastId);
+            response.put("message", "Podcast generated successfully");
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             log.error("Error generating podcast for URL: {}", url, e);
-
-            // Em caso de erro, retorna mensagem de erro como texto
-            String errorMessage = "Error generating podcast: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .header("Content-Type", "text/plain")
-                    .body(errorMessage.getBytes());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("videoUrl", url);
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    @GetMapping("/download/{podcastId}")
+    public ResponseEntity<byte[]> downloadPodcast(@PathVariable String podcastId) {
+        PodcastService.PodcastResult result = podcastCache.get(podcastId);
+        if (result == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"podcast.mp3\"")
+                .header("Content-Type", "audio/mpeg")
+                .body(result.getAudio());
+    }
+
+    @GetMapping("/stream/{podcastId}")
+    public ResponseEntity<byte[]> streamPodcast(@PathVariable String podcastId) {
+        PodcastService.PodcastResult result = podcastCache.get(podcastId);
+        if (result == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "audio/mpeg")
+                .header("Accept-Ranges", "bytes") // Para permitir seek no audio
+                .body(result.getAudio());
+    }
+
+    /**
+     * Endpoint para limpar cache (útil para testes)
+     */
+    @PostMapping("/clear-cache")
+    public ResponseEntity<Map<String, Object>> clearCache() {
+        int sizeBefore = podcastCache.size();
+        podcastCache.clear();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Cache cleared");
+        response.put("itemsRemoved", sizeBefore);
+
+        log.info("Podcast cache cleared. Removed {} items", sizeBefore);
+        return ResponseEntity.ok(response);
     }
 }
