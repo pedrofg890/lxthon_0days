@@ -55,9 +55,15 @@ export default function HomePage() {
         const controller = new AbortController();
         setAbortController(controller);
         try {
-            // Start transcript and summary requests immediately
+            // Start transcript request immediately
             const transcriptPromise = (async () => { const res = await getTranscript(url, controller.signal); setLoadingTranscript(false); return res; })();
-            const summaryPromise = (async () => { const res = await getSummary(url, controller.signal); setLoadingSummary(false); return res; })();
+            // Wait 15 seconds before starting summary request
+            const summaryPromise = (async () => {
+                await new Promise(resolve => setTimeout(resolve, 15000));
+                const res = await getSummary(url, controller.signal);
+                setLoadingSummary(false);
+                return res;
+            })();
             // Wait 30 seconds before starting quiz request
             const quizPromise = (async () => {
                 await new Promise(resolve => setTimeout(resolve, 30000));
