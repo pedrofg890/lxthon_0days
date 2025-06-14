@@ -1,14 +1,10 @@
 package lxthon.backend.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import lxthon.backend.Domain.Quiz;
-import lxthon.backend.Domain.QuizQuestion;
-import lxthon.backend.Domain.TranscriptSegment;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * QuizGeneratorService: cria um Quiz com base na transcrição limpa.
@@ -42,6 +38,11 @@ public class QuizGeneratorService {
 
         if (response == null || response.trim().isEmpty()) {
             throw new IllegalArgumentException("Resposta da API veio vazia.");
+        }
+
+        response = response.trim();
+        if (response.startsWith("```")) {
+            response = response.replaceAll("```(json)?", "").replaceAll("```", "").trim();
         }
 
         return mapper.readValue(response, Quiz.class);

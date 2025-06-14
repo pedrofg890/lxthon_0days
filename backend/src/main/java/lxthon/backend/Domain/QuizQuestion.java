@@ -1,5 +1,6 @@
 package lxthon.backend.Domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,17 +9,15 @@ import lombok.Setter;
 import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class QuizQuestion {
-    @Getter
-    @Setter
+    @JsonProperty("id")
     private String id;
-    @Getter
-    @Setter
+    @JsonProperty("question")
     String questionText;
-    @Getter
-    @Setter
+    @JsonProperty("choices")
     List<String> options;
-    @Getter
-    @Setter
+    @JsonProperty("correctIndex")
     int correctOptionIndex;
 }
