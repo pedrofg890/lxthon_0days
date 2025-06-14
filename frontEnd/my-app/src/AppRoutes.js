@@ -11,7 +11,7 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/transcript" element={<Transcript />} />
-            <Route path="/insights" element={<Insights />} />
+            <Route path="/summary" element={<Insights />} />
             <Route path="/quiz" element={<Quiz />} />
         </Routes>
     );

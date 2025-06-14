@@ -1,0 +1,11 @@
+{
+  "source": {
+    "include": ["src/components", "src/services"],
+    "includePattern": ".+\\.jsx?$"
+  },
+  "opts": {
+    "destination": "docs/js",
+    "recurse": true,
+    "encoding": "utf8"
+  }
+}
