@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function QuizForm({ quiz, onSubmit }) {
+function QuizForm2({ quiz, onSubmit }) {
     const [answers, setAnswers] = useState({});
 
     const handleChange = (qid, idx) => {
@@ -46,3 +46,4 @@ export default function QuizForm({ quiz, onSubmit }) {
         </form>
     );
 }
+export default QuizForm2;

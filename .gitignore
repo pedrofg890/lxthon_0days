@@ -52,6 +52,9 @@ backend/.env
 .idea/**/dictionaries
 .idea/**/shelf
 
+
+settings.json
+
 # AWS User-specific
 .idea/**/aws.xml
 

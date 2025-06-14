@@ -1,11 +1,13 @@
-// components/quiz/quizPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getQuizFromVideo } from '../../services/quizService';
-import QuizForm from './quizForm';
+import QuizForm2 from './QuizForm2';
+import '../../styles/GeneralButtom.css';
 
-export default function QuizPage() {
+
+function QuizPage2() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const videoUrl     = searchParams.get('url') || '';
     const numQuestions = parseInt(searchParams.get('numQuestions') || '5', 10);
 
@@ -24,27 +26,33 @@ export default function QuizPage() {
     }, [videoUrl, numQuestions]);
 
     if (!videoUrl) {
-        return <p style={{ color: 'white', textAlign: 'center' }}>Por favor volte à Home e cole o link do vídeo.</p>;
+        return <p style={{ color: 'white', textAlign: 'center' }}>Go back to the home page and paste the video link.</p>;
     }
     if (loading) {
-        return <p style={{ color: 'white', textAlign: 'center' }}>Gerando quiz… isto pode demorar 20–30 segundos</p>;
+        return <p style={{ color: 'white', textAlign: 'center' }}>Generating quiz… this may take 20–30 seconds</p>;
     }
     if (error) {
         return <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>;
     }
     if (!quiz) {
-        return null; // antes de disparar o fetch
+        return null; 
     }
 
     return (
+        
         <div style={{ maxWidth: 800, margin: '2rem auto', color: 'white' }}>
-            <QuizForm
+            <button className="generalButton" style={{ margin: 0 }} onClick={() => navigate('/')}>Back to Home</button>
+            <QuizForm2
                 quiz={quiz}
                 onSubmit={(answers) => {
                     console.log('Respostas submetidas:', answers);
-                    // aqui podes dar feedback
                 }}
             />
+
+
         </div>
     );
 }
+
+
+export default QuizPage2;

@@ -1,12 +1,11 @@
 import React from 'react';
-import QuizPage from "../components/quiz/quizPage";
+import QuizPage2 from '../components/quiz/QuizPage2';
 
 function Quiz() {
     return (
         <>
-            <QuizPage/>
+            <QuizPage2 />
         </>
-
     );
 }
 
