@@ -46,6 +46,9 @@ public class TranscriptCleanerService {
     // Maximum number of segments to process in one API call
     private static final int MAX_SEGMENTS_PER_CHUNK = 50;
 
+    // Maximum number of characters per chunk
+    private static final int CHARS_PER_CHUNK = 4000;
+
     /**
      * Constructs a new TranscriptCleanerService.
      *
@@ -68,72 +71,101 @@ public class TranscriptCleanerService {
      * @throws IOException if parsing the LLM response fails
      */
     public List<TranscriptSegment> cleanTranscript(List<TranscriptSegment> segments) throws IOException {
-        // Extract all raw text with segment markers
+        // Step 1: Extract all text without markers
         StringBuilder fullText = new StringBuilder();
-        for (int i = 0; i < segments.size(); i++) {
-            TranscriptSegment segment = segments.get(i);
-            fullText.append("[SEG").append(i).append("]")
-                    .append(segment.getText())
-                    .append("[/SEG").append(i).append("] ");
+        for (TranscriptSegment segment : segments) {
+            fullText.append(segment.getText()).append(" ");
+        }
+        String allText = fullText.toString();
+        
+        // Step 2: Split text into chunks by character count
+        List<String> textChunks = new ArrayList<>();
+        for (int i = 0; i < allText.length(); i += CHARS_PER_CHUNK) {
+            int end = Math.min(i + CHARS_PER_CHUNK, allText.length());
+            
+            // Adjust end to avoid breaking in the middle of a word
+            if (end < allText.length()) {
+                int spacePos = allText.lastIndexOf(" ", end);
+                if (spacePos > i) {
+                    end = spacePos + 1;
+                }
+            }
+            
+            textChunks.add(allText.substring(i, end));
         }
         
-        // Modify prompt for this approach
-        String prompt = "You are a transcript cleaner focused on removing verbal disfluencies.\n\n" +
-               "CRITICALLY IMPORTANT: Your primary task is to REMOVE ALL filler words including but not limited to:\n" +
-               "- 'uh', 'um', 'er', 'ah', 'eh'\n" +
-               "- 'like', 'you know', 'I mean', 'kind of', 'sort of'\n" +
-               "- Repeated words ('the the', 'I I I')\n" +
-               "- False starts and incomplete phrases\n" +
-               "- ANY hesitation sound or unnecessary verbal pause\n\n" +
-               
-               "Example: \"I um actually uh wanted to like you know see if uh we could...\" → \"I actually wanted to see if we could...\"\n\n" +
-               
-               "Additional tasks (secondary to removing fillers):\n" +
-               "1. Fix grammar and punctuation\n" +
-               "2. Normalize numbers and acronyms\n" +
-               "3. Preserve meaningful content\n\n" +
-               
-               "CRITICAL: Keep ALL [SEGx] and [/SEGx] markers EXACTLY as they appear - they are required for processing.\n\n" +
-               
-               "Return ONLY the cleaned transcript with segment markers preserved.\n\n" +
-               
-               "Transcript to clean:\n" + 
-               fullText.toString();
-        
-        // Get cleaned text
-        String cleanedText = openAIService.getChatCompletion(prompt);
-        
-        // Process the result
-        List<TranscriptSegment> result = new ArrayList<>();
-        for (int i = 0; i < segments.size(); i++) {
-            String marker = "\\[SEG" + i + "\\](.*?)\\[/SEG" + i + "\\]";
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(marker, java.util.regex.Pattern.DOTALL);
-            java.util.regex.Matcher matcher = pattern.matcher(cleanedText);
+        // Step 3: Clean each text chunk
+        StringBuilder cleanedFullText = new StringBuilder();
+        for (String chunk : textChunks) {
+            String cleanedChunk = cleanTextChunk(chunk);
+            cleanedFullText.append(cleanedChunk).append(" ");
             
-            if (matcher.find()) {
-                String cleaned = matcher.group(1).trim();
-                TranscriptSegment original = segments.get(i);
-                
-                TranscriptSegment newSegment = new TranscriptSegment();
-                newSegment.setStartTime(original.getStartTime());
-                newSegment.setEndTime(original.getEndTime());
-                newSegment.setText(original.getText());
-                newSegment.setNormalizedText(cleaned);
-                
-                result.add(newSegment);
-            } else {
-                // Fallback if segment not found - keep original
-                TranscriptSegment original = segments.get(i);
-                TranscriptSegment newSegment = new TranscriptSegment();
-                newSegment.setStartTime(original.getStartTime());
-                newSegment.setEndTime(original.getEndTime());
-                newSegment.setText(original.getText());
-                newSegment.setNormalizedText(original.getText());
-                result.add(newSegment);
+            // Add delay between API calls
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
         
+        // Step 4: Split cleaned text back into segments based on word proportion
+        String cleanedText = cleanedFullText.toString().trim();
+        String[] originalWords = allText.split("\\s+");
+        String[] cleanedWords = cleanedText.split("\\s+");
+        
+        // Calculate ratio of cleaned words to original words
+        double ratio = (double) cleanedWords.length / originalWords.length;
+        
+        List<TranscriptSegment> result = new ArrayList<>();
+        int currentWordIndex = 0;
+        
+        for (TranscriptSegment originalSegment : segments) {
+            int originalWordCount = originalSegment.getText().split("\\s+").length;
+            int estimatedCleanedWordCount = (int) Math.round(originalWordCount * ratio);
+            estimatedCleanedWordCount = Math.max(1, Math.min(estimatedCleanedWordCount, 
+                                             cleanedWords.length - currentWordIndex));
+            
+            // Create cleaned segment text
+            StringBuilder segmentText = new StringBuilder();
+            for (int i = 0; i < estimatedCleanedWordCount && currentWordIndex < cleanedWords.length; i++) {
+                if (i > 0) segmentText.append(" ");
+                segmentText.append(cleanedWords[currentWordIndex++]);
+            }
+            
+            // Create new segment with cleaned text
+            TranscriptSegment newSegment = new TranscriptSegment();
+            newSegment.setStartTime(originalSegment.getStartTime());
+            newSegment.setEndTime(originalSegment.getEndTime());
+            newSegment.setText(originalSegment.getText());
+            newSegment.setNormalizedText(segmentText.toString());
+            result.add(newSegment);
+        }
+        
         return result;
+    }
+
+    private String cleanTextChunk(String chunk) throws IOException {
+        String prompt = "You are a transcript cleaner focused on removing verbal disfluencies.\n\n" +
+                       "CRITICALLY IMPORTANT:\n" +
+                       "1. Remove ALL filler words including:\n" +
+                       "   - 'uh', 'um', 'er', 'ah', 'eh'\n" +
+                       "   - 'like', 'you know', 'I mean'\n" +
+                       "   - Repeated words and false starts\n\n" +
+                       
+                       "2. DO NOT include ANY markers, tags, or special formatting in your response.\n" +
+                       "   - Remove any [SEGx] or [/SEGx] markers if present\n" +
+                       "   - Return ONLY the cleaned text\n\n" +
+                       
+                       "Example: \"I um actually uh wanted to like you know see if uh we could...\" → \"I actually wanted to see if we could...\"\n\n" +
+                       
+                       "Also fix grammar/punctuation and normalize formatting.\n\n" +
+                       
+                       "Text to clean:\n" + chunk;
+        
+        String cleanedText = openAIService.getChatCompletion(prompt);
+        
+        // Post-process to remove any remaining markers
+        return cleanedText.replaceAll("\\[SEG\\d+\\]|\\[/SEG\\d+\\]", "").trim();
     }
 
     /**
