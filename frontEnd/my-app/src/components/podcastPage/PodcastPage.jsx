@@ -3,6 +3,20 @@ import { getPodcast, downloadPodcast, streamPodcast } from '../../services/podca
 import '../../styles/BelowBarButtom.css';
 import '../../styles/RequestButtom.css';
 
+/**
+ * PodcastPage
+ *
+ * A React component that allows the user to:
+ * 1. Submit a YouTube (or other) URL to generate a podcast audio.
+ * 2. Download the generated audio as an MP3.
+ * 3. Stream (play) the generated audio directly in the browser.
+ *
+ * @component
+ * @example
+ * return <PodcastPage />;
+ *
+ * @returns {JSX.Element} The rendered PodcastPage.
+ */
 export default function PodcastPage() {
     const [url, setUrl] = useState("");
     const [audioSrc, setAudioSrc] = useState("");
@@ -12,7 +26,18 @@ export default function PodcastPage() {
     const [podcastInfo, setPodcastInfo] = useState(null);
     const audioRef = useRef(null);
 
-    // Podcast request handler
+
+    /**
+     * handleRequestPodcast
+     *
+     * Invokes getPodcast() to generate a podcast based on the provided URL.
+     * On success, stores the returned info and initializes audioSrc.
+     * On failure, displays an error message.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>}
+     */
     const handleRequestPodcast = async () => {
         setError("");
         setLoadingPodcast(true);
@@ -28,7 +53,16 @@ export default function PodcastPage() {
         }
     };
 
-    // Download handler using podcastId
+    /**
+     * handleDownload
+     *
+     * Uses downloadPodcast() to fetch the MP3 blob for the current podcastId,
+     * then triggers a browser download via an <a> element.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>}
+     */
     const handleDownload = async () => {
         setError("");
         setDownloading(true);
@@ -51,6 +85,16 @@ export default function PodcastPage() {
         }
     };
 
+    /**
+     * handlePlay
+     *
+     * Uses streamPodcast() to fetch the MP3 blob for immediate playback,
+     * then sets audioSrc to the blob URL and plays the audio.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>}
+     */
     const handlePlay = async () => {
         if (!podcastInfo || !podcastInfo.podcastId) return;
         try {
