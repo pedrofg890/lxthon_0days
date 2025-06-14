@@ -7,6 +7,17 @@ import '../../styles/HomePage.css'
 import '../../styles/RequestButtom.css';
 import '../../styles/BelowBarButtom.css';
 
+/**
+ * HomePage component.
+ *
+ * Allows the user to input a YouTube URL and then:
+ *  - Fetch raw transcript
+ *  - Generate summary
+ *  - Generate quiz
+ *
+ * Manages individual loading states for each operation and allows
+ * cancelling in‐flight requests.
+ */
 export default function HomePage() {
     const [url, setUrl] = useState("");
     const [transcript, setTranscript] = useState(null);
@@ -21,8 +32,16 @@ export default function HomePage() {
     const [abortController, setAbortController] = useState(null);
     const navigate = useNavigate();
 
+    /**
+     * Handle URL input change.
+     * @param {React.ChangeEvent<HTMLInputElement>} e
+     */
     const handleInputChange = (e) => setUrl(e.target.value);
 
+    /**
+     * Kick off transcript, summary and (delayed) quiz fetches in parallel.
+     * Allows cancellation via AbortController.
+     */
     const handleRequest = async () => {
         setLoading(true);
         setError("");
@@ -36,9 +55,15 @@ export default function HomePage() {
         const controller = new AbortController();
         setAbortController(controller);
         try {
-            // Start transcript and summary requests immediately
+            // Start transcript request immediately
             const transcriptPromise = (async () => { const res = await getTranscript(url, controller.signal); setLoadingTranscript(false); return res; })();
-            const summaryPromise = (async () => { const res = await getSummary(url, controller.signal); setLoadingSummary(false); return res; })();
+            // Wait 15 seconds before starting summary request
+            const summaryPromise = (async () => {
+                await new Promise(resolve => setTimeout(resolve, 15000));
+                const res = await getSummary(url, controller.signal);
+                setLoadingSummary(false);
+                return res;
+            })();
             // Wait 30 seconds before starting quiz request
             const quizPromise = (async () => {
                 await new Promise(resolve => setTimeout(resolve, 30000));
@@ -71,6 +96,9 @@ export default function HomePage() {
         }
     };
 
+    /**
+     * Cancels any in‐flight requests.
+     */
     const handleStop = () => {
         if (abortController) {
             abortController.abort();
@@ -87,9 +115,10 @@ export default function HomePage() {
     }
 
     return (
-        <section className="home-page-cta-section">
+        <section className="home-page-cta-section" style={{ position: 'relative', minHeight: '100vh' }}>
 
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '4vh', left: 0, right: 0 }}>
+                <img src={process.env.PUBLIC_URL + '/img.png'} alt="Logo" style={{ maxWidth: 180, height: 'auto', display: 'block', margin: '0 auto 2rem auto', borderRadius: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }} />
                 <h1 style={{ color: '#fff', textAlign: 'center', marginBottom: '2rem', fontSize: '3rem' }}>Got a YouTube video? Feed us the link!</h1>
                 <div style={{ width: '100%', maxWidth: '900px', display: 'flex', alignItems: 'center', background: '#1a1a1a', borderRadius: '36px', border: '1px solid #333', padding: '0.75rem 1.5rem', boxShadow: '0 2px 12px rgba(0,0,0,0.2)', position: 'relative' }}>
                     <input
