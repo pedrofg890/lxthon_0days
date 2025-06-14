@@ -35,6 +35,24 @@ export default function TranscriptPage() {
         return () => clearInterval(interval);
     }, []);
 
+    // Helper to format seconds to mm:ss:ms or ss:ms, always 2 digits for min/sec, 3 for ms
+    function formatTime(time) {
+        // Accepts time as string or number (seconds, possibly with decimals)
+        let t = typeof time === 'string' ? parseFloat(time) : time;
+        if (isNaN(t)) return time;
+        const minutes = Math.floor(t / 60);
+        const seconds = Math.floor(t % 60);
+        const milliseconds = Math.floor((t - Math.floor(t)) * 1000);
+        const minStr = minutes.toString().padStart(2, '0');
+        const secStr = seconds.toString().padStart(2, '0');
+        const msStr = milliseconds.toString().padStart(3, '0').slice(0, 3);
+        if (minutes > 0) {
+            return `${minStr}:${secStr}:${msStr}`;
+        } else {
+            return `${secStr}:${msStr}`;
+        }
+    }
+
     return (
         <section className="transcript-page-section" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '3rem' }}>
             {loading ? (
@@ -101,8 +119,8 @@ export default function TranscriptPage() {
                                 alignItems: 'center',
                                 fontSize: '1.6rem',
                             }}>
-                                <div>{line.startTime}</div>
-                                <div>{line.endTime}</div>
+                                <div>{formatTime(line.startTime)}</div>
+                                <div>{formatTime(line.endTime)}</div>
                                 <div>{line.normalizedText}</div>
                             </div>
                         ))

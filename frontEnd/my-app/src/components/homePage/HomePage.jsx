@@ -66,7 +66,7 @@ export default function HomePage() {
             })();
             // Wait 30 seconds before starting quiz request
             const quizPromise = (async () => {
-                await new Promise(resolve => setTimeout(resolve, 30000));
+                await new Promise(resolve => setTimeout(resolve, 60000));
                 const res = await getQuiz(url, 5, controller.signal);
                 setLoadingQuiz(false);
                 return res;
@@ -194,26 +194,30 @@ export default function HomePage() {
                         style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         Get Transcript
-                        {loadingTranscript && (
+                        {loadingTranscript ? (
                             <span className="loading-spinner" style={{
                                 marginLeft: 12,
                                 width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
                             }} />
-                        )}
+                        ) : transcript ? (
+                            <span style={{ marginLeft: 12, color: 'lightgreen', fontSize: 22, display: 'inline-block' }}>✔</span>
+                        ) : null}
                     </button>
                     <button
                         className="belowBarButton"
-                        onClick={() => navigate('/insights')}
+                        onClick={() => navigate('/summary')}
                         disabled={loadingSummary}
                         style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         Get Summary
-                        {loadingSummary && (
+                        {loadingSummary ? (
                             <span className="loading-spinner" style={{
                                 marginLeft: 12,
                                 width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
                             }} />
-                        )}
+                        ) : summary ? (
+                            <span style={{ marginLeft: 12, color: 'lightgreen', fontSize: 22, display: 'inline-block' }}>✔</span>
+                        ) : null}
                     </button>
                     <button
                         className="belowBarButton"
@@ -222,12 +226,14 @@ export default function HomePage() {
                         style={{ position: 'relative', minWidth: 160, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         Generate Quizz
-                        {loadingQuiz && (
+                        {loadingQuiz ? (
                             <span className="loading-spinner" style={{
                                 marginLeft: 12,
                                 width: 22, height: 22, border: '3px solid #fff', borderTop: '3px solid #888', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block',
                             }} />
-                        )}
+                        ) : quiz ? (
+                            <span style={{ marginLeft: 12, color: 'lightgreen', fontSize: 22, display: 'inline-block' }}>✔</span>
+                        ) : null}
                     </button>
                 </div>
                 {error && <div style={{ color: 'red', marginTop: '1rem' }}>{error}</div>}
