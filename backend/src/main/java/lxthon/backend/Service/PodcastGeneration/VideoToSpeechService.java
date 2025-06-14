@@ -18,7 +18,7 @@ public class VideoToSpeechService {
     private static final Logger log = LoggerFactory.getLogger(VideoToSpeechService.class);
 
     private final String apiKey;
-    private final HttpClient httpClient;
+
     private final ObjectMapper objectMapper;
 
     // Voice IDs for different speakers (you can change these)
@@ -43,15 +43,13 @@ public class VideoToSpeechService {
         }
 
         this.apiKey = key;
-
-        this.httpClient = HttpClient.newBuilder().build();
-
+        // REMOVE: this.httpClient = null;
         this.objectMapper = new ObjectMapper();
 
         if (this.apiKey == null || this.apiKey.trim().isEmpty()) {
             log.warn("ElevenLabs API key not found. Service will run in mock mode.");
         } else {
-            log.info("ElevenLabs service initialized successfully");
+            log.info("VideoToSpeech Service initialized successfully");
         }
     }
 
@@ -66,25 +64,28 @@ public class VideoToSpeechService {
 
         try {
             String requestBody = String.format("""
-                {
-                    "text": "%s",
-                    "model_id": "eleven_monolingual_v1",
-                    "voice_settings": {
-                        "stability": 0.5,
-                        "similarity_boost": 0.5
-                    }
+            {
+                "text": "%s",
+                "model_id": "eleven_monolingual_v1",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.5
                 }
-                """, text.replace("\"", "\\\"").replace("\n", "\\n"));
+            }
+            """, text.replace("\"", "\\\"").replace("\n", "\\n"));
+
+            // CRIAR NOVO HttpClient A CADA CHAMADA (evita problemas de threading)
+            HttpClient client = HttpClient.newHttpClient();
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.elevenlabs.io/v1/video-to-speech/" + voiceId))
+                    .uri(URI.create("https://api.elevenlabs.io/v1/text-to-speech/" + voiceId))
                     .header("Accept", "audio/mpeg")
                     .header("Content-Type", "application/json")
                     .header("xi-api-key", apiKey)
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .build();
 
-            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
             if (response.statusCode() != 200) {
                 throw new RuntimeException("ElevenLabs API call failed: " + response.statusCode() +
@@ -113,36 +114,6 @@ public class VideoToSpeechService {
      */
     public byte[] generateHostBSpeech(String text) throws IOException, InterruptedException {
         return generateSpeech(text, VOICE_ID_HOST_B);
-    }
-
-    /**
-     * Get available voices from ElevenLabs
-     */
-    public String getAvailableVoices() throws IOException, InterruptedException {
-        if (apiKey == null || apiKey.trim().isEmpty()) {
-            return "Mock voices: Rachel, Domi";
-        }
-
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.elevenlabs.io/v1/voices"))
-                    .header("Accept", "application/json")
-                    .header("xi-api-key", apiKey)
-                    .GET()
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Failed to get voices: " + response.statusCode());
-            }
-
-            return response.body();
-
-        } catch (Exception e) {
-            log.error("Error getting voices: {}", e.getMessage());
-            return "Error getting voices: " + e.getMessage();
-        }
     }
 
     /**

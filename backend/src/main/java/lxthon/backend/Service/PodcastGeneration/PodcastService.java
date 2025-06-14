@@ -4,6 +4,7 @@ import lombok.NonNull;
 import lxthon.backend.Service.OpenAIService;
 import lxthon.backend.Service.TranscriptCleanerService;
 import lxthon.backend.Service.VideoService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class PodcastService {
 
     public PodcastService(@NonNull VideoService videoService,
                           @NonNull OpenAIService openAIService,
-                          @NonNull VideoToSpeechService videoToSpeechService,
+                          @NotNull VideoToSpeechService videoToSpeechService,
                           @NonNull TranscriptCleanerService transcriptCleanerService) {
         this.videoService = videoService;
         this.openAIService = openAIService;
@@ -75,7 +76,7 @@ public class PodcastService {
     }
 
     /**
-     * Generate podcast script using OpenAI
+     * Generate podcast script using OpenAI (sempre 2 minutos)
      */
     private String generatePodcastScript(List<TranscriptSegment> cleanedTranscript,
                                          String hostAName, String hostBName) {
@@ -86,39 +87,91 @@ public class PodcastService {
                         segment.getNormalizedText() : segment.getText())
                 .collect(Collectors.joining(" "));
 
-        // Create the prompt for OpenAI
+        // SEMPRE 2 MINUTOS - limitar conteúdo
+        String limitedContent = limitContentFor2Minutes(fullTranscript);
+
+        // Create the prompt for OpenAI with STRICT 2-minute duration
         String prompt = String.format("""
-            Transform the following content into an engaging podcast conversation between two hosts.
-            
-            HOSTS:
-            - %s: An enthusiastic tech educator who explains concepts clearly and engagingly
-            - %s: A curious interviewer who asks insightful questions and provides thoughtful reactions
-            
-            REQUIREMENTS:
-            - Create natural, conversational dialogue
-            - Break down complex concepts into simple explanations
-            - Include natural reactions, transitions, and speech patterns
-            - Make it engaging for a general audience
-            - Target 5-8 minutes of conversation
-            - Include occasional humor and interesting analogies
-            - End with key takeaways
-            
-            FORMAT (very important - use exactly this format):
-            %s: [Speaker A's dialogue]
-            %s: [Speaker B's dialogue]
-            %s: [Speaker A's response]
-            %s: [Speaker B's follow-up]
-            
-            CONTENT TO TRANSFORM:
-            %s
-            
-            Generate an engaging podcast conversation:
-            """,
+        Transform the following content into an engaging podcast conversation between two hosts.
+        
+        STRICT REQUIREMENTS:
+        - MAXIMUM DURATION: 2 minutes (approximately 300 words total)
+        - Keep each speaker turn to 15-25 words maximum
+        - Total conversation should be 250-300 words
+        - Natural, conversational dialogue
+        
+        HOSTS:
+        - %s: An enthusiastic tech educator who explains concepts clearly
+        - %s: A curious interviewer who asks insightful questions
+        
+        CONVERSATION STRUCTURE:
+        1. Brief intro (30 words max)
+        2. Main discussion (200 words max) 
+        3. Quick conclusion (30 words max)
+        
+        FORMAT (very important - use exactly this format):
+        %s: [Brief intro - max 20 words]
+        %s: [Question/reaction - max 20 words]
+        %s: [Explanation - max 25 words]
+        %s: [Follow-up - max 20 words]
+        %s: [Response - max 25 words]
+        %s: [Final question - max 20 words]
+        %s: [Conclusion - max 25 words]
+        %s: [Closing - max 15 words]
+        
+        CONTENT TO TRANSFORM:
+        %s
+        
+        Generate a SHORT 2-minute podcast conversation (300 words MAX):
+        """,
                 hostAName, hostBName,
-                hostAName, hostBName, hostAName, hostBName,
-                fullTranscript);
+                hostAName, hostBName, hostAName, hostBName, hostAName, hostBName, hostAName, hostBName,
+                limitedContent);
 
         return openAIService.getChatCompletion(prompt);
+    }
+
+    /**
+     * Limit content to fit within 2 minutes
+     * @param content Original transcript content
+     * @return Limited content string
+     */
+    private String limitContentFor2Minutes(String content) {
+        // Para 2 minutos: ~300 palavras de output
+        // Usar ~150 palavras de source content para dar espaço à conversa
+        int maxSourceWords = 150;
+
+        String[] words = content.split("\\s+");
+
+        if (words.length <= maxSourceWords) {
+            return content;
+        }
+
+        // Take the first part and try to end at a sentence boundary
+        StringBuilder limited = new StringBuilder();
+        int wordCount = 0;
+
+        for (String word : words) {
+            limited.append(word).append(" ");
+            wordCount++;
+
+            // Try to end at sentence boundary near the limit
+            if (wordCount >= maxSourceWords) {
+                if (word.endsWith(".") || word.endsWith("!") || word.endsWith("?")) {
+                    break;
+                }
+            }
+
+            // Hard limit at 180 words
+            if (wordCount >= 180) {
+                break;
+            }
+        }
+
+        String result = limited.toString().trim();
+        log.info("Limited content from {} words to {} words", words.length, result.split("\\s+").length);
+
+        return result;
     }
 
     /**
