@@ -1,4 +1,4 @@
-# LXThon AITA Study Assistant 
+# LXThon AITSA Study Assistant 
 
 *An educational assistant tool leveraging YouTube videos to aid in learning and comprehension.*
 
@@ -125,14 +125,22 @@ Base path: `/podcast-api/chat`
 
 - **Transcript Page** (`/transcript`): Displays time-coded transcript.
 
+![](video/transcript_aitsa-ezgif.gif)
+
 - **Insights Page** (`/insights`): Shows AI-generated summary.
 
+![](video/summary_aitsa-ezgif.gif)
+
 - **Quiz Page** (`/quiz`): Interactive multiple-choice quiz, shows score.
+
+![](video/quiz_aitsa-ezgif.gif)
 
 - **Podcast Page** (`/podcast`):
 
    - Enter URL → generate podcast
    - Download or play audio in-browser
+
+![](video/podcast_aitsa_gif.gif)
 
 ---
 
