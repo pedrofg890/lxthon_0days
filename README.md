@@ -187,6 +187,6 @@ frontend/
 
 ## License
 
-AITSA - Study Assistant © 0days
+AITSA - Artificial Intelligence Transcript Study Assistant © 0days
 
 Enjoy learning! 🚀
