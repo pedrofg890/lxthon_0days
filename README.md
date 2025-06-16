@@ -1,4 +1,4 @@
-# LXThon AITSA Study Assistant 
+# LXThon AITSA Artificial Intelligence Transcript Study Assistant 
 
 *An educational assistant tool leveraging YouTube videos to aid in learning and comprehension.*
 
